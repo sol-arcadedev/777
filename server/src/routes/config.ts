@@ -4,6 +4,7 @@ import { serializeConfig } from "../lib/serialize.js";
 import { getRewardWalletBalance } from "../services/solana.js";
 import { wsBroadcaster } from "../services/wsServer.js";
 import { adminAuth } from "../middleware/adminAuth.js";
+import { setTokenMintAddress } from "../config/wallets.js";
 import type { UpdateConfigRequest } from "@shared/types";
 
 const router = Router();
@@ -40,7 +41,10 @@ router.put("/api/config", adminAuth, async (req, res) => {
     const body: UpdateConfigRequest = req.body;
     const data: Record<string, unknown> = {};
 
-    if (body.tokenCA !== undefined) data.tokenCA = body.tokenCA;
+    if (body.tokenCA !== undefined) {
+      data.tokenCA = body.tokenCA;
+      setTokenMintAddress(body.tokenCA);
+    }
     if (body.requiredHoldings !== undefined)
       data.requiredHoldings = BigInt(body.requiredHoldings);
     if (body.minSolTransfer !== undefined)

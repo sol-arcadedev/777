@@ -3,6 +3,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  TransactionInstruction,
   VersionedTransaction,
   LAMPORTS_PER_SOL,
   sendAndConfirmTransaction,
@@ -11,6 +12,8 @@ import {
   getAssociatedTokenAddress,
   getAccount,
   createBurnCheckedInstruction,
+  createAssociatedTokenAccountInstruction,
+  createCloseAccountInstruction,
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -20,14 +23,16 @@ import {
   creatorWallet,
   rewardWallet,
   treasuryAddress,
-  tokenMintAddress,
+  getTokenMintAddress,
 } from "../config/wallets.js";
 
 const DEV_MODE = process.env.DEV_MODE === "true";
 
 /** Detect whether a mint uses classic SPL Token or Token-2022. */
 async function getTokenProgram(): Promise<PublicKey> {
-  const info = await connection.getAccountInfo(tokenMintAddress);
+  const mint = getTokenMintAddress();
+  if (!mint) throw new Error("Token mint address not configured");
+  const info = await connection.getAccountInfo(mint);
   if (!info) throw new Error("Token mint account not found");
   if (info.owner.equals(TOKEN_2022_PROGRAM_ID)) return TOKEN_2022_PROGRAM_ID;
   return TOKEN_PROGRAM_ID;
@@ -43,9 +48,11 @@ export async function checkTokenBalance(
     return true;
   }
   try {
+    const mint = getTokenMintAddress();
+    if (!mint) return false;
     const owner = new PublicKey(holderAddress);
     const tokenProgram = await getTokenProgram();
-    const ata = await getAssociatedTokenAddress(tokenMintAddress, owner, false, tokenProgram);
+    const ata = await getAssociatedTokenAddress(mint, owner, false, tokenProgram);
     const account = await getAccount(connection, ata, "confirmed", tokenProgram);
     return account.amount >= requiredAmount;
   } catch (err: unknown) {
@@ -211,44 +218,219 @@ async function pumpPortalTrade(
   return signature;
 }
 
-/** Claim PumpFun creator fees from Creator Wallet via PumpPortal. */
+// --- PumpFun native fee claim constants ---
+const PUMP_PROGRAM_ID = new PublicKey("6EF8rrecthR5Dkzon8Nwu78hRvfCKubJ14M5uBEwF6P");
+const PUMP_FEE_PROGRAM_ID = new PublicKey("pfeeUxB6jkeY1Hxd7CsFCAjcbHA9rWtchMGdZ6VojVZ");
+const PAMM_PROGRAM_ID = new PublicKey("pAMMBay6oceH9fJKBRHGP5D4bD4sWpmSwMn52FMfXEA");
+const WSOL_MINT = new PublicKey("So11111111111111111111111111111111111111112");
+
+// Anchor instruction discriminators (first 8 bytes of sha256("global:<instruction_name>"))
+const DISTRIBUTE_CREATOR_FEES_DISC = Buffer.from([165, 114, 103, 0, 121, 206, 247, 81]);
+const COLLECT_COIN_CREATOR_FEE_DISC = Buffer.from([160, 57, 89, 42, 181, 139, 43, 66]);
+
+// PDA derivation helpers
+function getBondingCurvePDA(mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("bonding-curve"), mint.toBuffer()],
+    PUMP_PROGRAM_ID,
+  )[0];
+}
+
+function getSharingConfigPDA(mint: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("sharing-config"), mint.toBuffer()],
+    PUMP_FEE_PROGRAM_ID,
+  )[0];
+}
+
+function getCreatorVaultPDA(sharingConfig: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("creator-vault"), sharingConfig.toBuffer()],
+    PUMP_PROGRAM_ID,
+  )[0];
+}
+
+function getPumpEventAuthorityPDA(): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("__event_authority")],
+    PUMP_PROGRAM_ID,
+  )[0];
+}
+
+function getPammCreatorVaultPDA(creator: PublicKey): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("creator_vault"), creator.toBuffer()],
+    PAMM_PROGRAM_ID,
+  )[0];
+}
+
+function getPammEventAuthorityPDA(): PublicKey {
+  return PublicKey.findProgramAddressSync(
+    [Buffer.from("__event_authority")],
+    PAMM_PROGRAM_ID,
+  )[0];
+}
+
+/**
+ * Claim PumpFun creator fees directly on-chain (no PumpPortal dependency).
+ *
+ * Handles two fee sources:
+ * 1. Bonding phase fees — DistributeCreatorFees on pump program (native SOL)
+ * 2. Post-migration fees — CollectCoinCreatorFee on pAMM program (WSOL → unwrap)
+ *
+ * Both are attempted independently; if one fails the other still runs.
+ */
 export async function claimCreatorFees(): Promise<{
   tx: string;
   totalClaimed: number;
 }> {
   if (DEV_MODE) {
-    console.log(`[DEV_MODE] claimCreatorFees: skipping PumpPortal call`);
+    console.log(`[DEV_MODE] claimCreatorFees: skipping on-chain call`);
     return { tx: `dev-mock-claim-${Date.now()}`, totalClaimed: 0 };
   }
+
+  let totalClaimed = 0;
+  let lastTx = "";
+
+  const mint = getTokenMintAddress();
+  if (!mint) {
+    console.log("claimCreatorFees: token mint not configured, skipping");
+    return { tx: "", totalClaimed: 0 };
+  }
+
+  // --- Part 1: Pump program claim (bonding phase fees) ---
   try {
     const balanceBefore = await connection.getBalance(creatorWallet.publicKey);
 
-    const tx = await pumpPortalTrade(
-      {
-        publicKey: creatorWallet.publicKey.toBase58(),
-        action: "collectCreatorFee",
-        mint: tokenMintAddress.toBase58(),
-        priorityFee: PRIORITY_FEE,
-      },
-      creatorWallet,
-    );
+    const bondingCurve = getBondingCurvePDA(mint);
+    const sharingConfig = getSharingConfigPDA(mint);
+    const creatorVault = getCreatorVaultPDA(sharingConfig);
+    const eventAuthority = getPumpEventAuthorityPDA();
 
-    // Fetch tx to get the fee paid, so we can calculate actual claimed amount
-    const txDetails = await connection.getTransaction(tx, {
-      commitment: "confirmed",
-      maxSupportedTransactionVersion: 0,
-    });
-    const txFee = txDetails?.meta?.fee ?? 0;
+    // Check if creator vault exists and has lamports to claim
+    const vaultInfo = await connection.getAccountInfo(creatorVault);
+    if (vaultInfo && vaultInfo.lamports > 0) {
+      const ix = new TransactionInstruction({
+        programId: PUMP_PROGRAM_ID,
+        keys: [
+          { pubkey: mint, isSigner: false, isWritable: false },
+          { pubkey: bondingCurve, isSigner: false, isWritable: false },
+          { pubkey: sharingConfig, isSigner: false, isWritable: false },
+          { pubkey: creatorVault, isSigner: false, isWritable: true },
+          { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+          { pubkey: eventAuthority, isSigner: false, isWritable: false },
+          { pubkey: PUMP_PROGRAM_ID, isSigner: false, isWritable: false },
+          { pubkey: creatorWallet.publicKey, isSigner: true, isWritable: true },
+        ],
+        data: DISTRIBUTE_CREATOR_FEES_DISC,
+      });
 
-    const balanceAfter = await connection.getBalance(creatorWallet.publicKey);
-    const totalClaimed = (balanceAfter - balanceBefore + txFee) / LAMPORTS_PER_SOL;
+      const tx = new Transaction().add(ix);
+      const sig = await sendAndConfirmTransaction(connection, tx, [creatorWallet], {
+        commitment: "confirmed",
+        maxRetries: 3,
+      });
 
-    console.log(`claimCreatorFees: claimed ${totalClaimed} SOL (tx fee: ${txFee / LAMPORTS_PER_SOL} SOL, tx: ${tx})`);
-    return { tx, totalClaimed };
+      // Calculate actual claimed amount (balance diff + tx fee)
+      const txDetails = await connection.getTransaction(sig, {
+        commitment: "confirmed",
+        maxSupportedTransactionVersion: 0,
+      });
+      const txFee = txDetails?.meta?.fee ?? 5000;
+      const balanceAfter = await connection.getBalance(creatorWallet.publicKey);
+      const claimed = (balanceAfter - balanceBefore + txFee) / LAMPORTS_PER_SOL;
+
+      if (claimed > 0) {
+        totalClaimed += claimed;
+        lastTx = sig;
+        console.log(`claimCreatorFees (pump): claimed ${claimed} SOL (tx: ${sig})`);
+      }
+    }
   } catch (err) {
-    console.error("claimCreatorFees error:", err);
-    return { tx: "", totalClaimed: 0 };
+    console.error("claimCreatorFees (pump) error:", err);
   }
+
+  // --- Part 2: pAMM claim (post-migration fees, paid in WSOL) ---
+  try {
+    const balanceBefore = await connection.getBalance(creatorWallet.publicKey);
+
+    const pammCreatorVault = getPammCreatorVaultPDA(creatorWallet.publicKey);
+    const pammEventAuthority = getPammEventAuthorityPDA();
+    const vaultWsolAta = await getAssociatedTokenAddress(WSOL_MINT, pammCreatorVault, true);
+
+    // Only attempt if the vault's WSOL ATA exists (means post-migration fees may exist)
+    const vaultAtaInfo = await connection.getAccountInfo(vaultWsolAta);
+    if (vaultAtaInfo) {
+      const creatorWsolAta = await getAssociatedTokenAddress(WSOL_MINT, creatorWallet.publicKey);
+      const tx = new Transaction();
+
+      // Create creator's WSOL ATA if it doesn't exist
+      const creatorAtaInfo = await connection.getAccountInfo(creatorWsolAta);
+      if (!creatorAtaInfo) {
+        tx.add(
+          createAssociatedTokenAccountInstruction(
+            creatorWallet.publicKey,
+            creatorWsolAta,
+            creatorWallet.publicKey,
+            WSOL_MINT,
+          ),
+        );
+      }
+
+      // CollectCoinCreatorFee instruction
+      tx.add(
+        new TransactionInstruction({
+          programId: PAMM_PROGRAM_ID,
+          keys: [
+            { pubkey: WSOL_MINT, isSigner: false, isWritable: false },
+            { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+            { pubkey: creatorWallet.publicKey, isSigner: true, isWritable: true },
+            { pubkey: pammCreatorVault, isSigner: false, isWritable: false },
+            { pubkey: vaultWsolAta, isSigner: false, isWritable: true },
+            { pubkey: creatorWsolAta, isSigner: false, isWritable: true },
+            { pubkey: pammEventAuthority, isSigner: false, isWritable: false },
+            { pubkey: PAMM_PROGRAM_ID, isSigner: false, isWritable: false },
+          ],
+          data: COLLECT_COIN_CREATOR_FEE_DISC,
+        }),
+      );
+
+      // Close WSOL ATA to unwrap to native SOL
+      tx.add(
+        createCloseAccountInstruction(
+          creatorWsolAta,
+          creatorWallet.publicKey,
+          creatorWallet.publicKey,
+        ),
+      );
+
+      const sig = await sendAndConfirmTransaction(connection, tx, [creatorWallet], {
+        commitment: "confirmed",
+        maxRetries: 3,
+      });
+
+      const txDetails = await connection.getTransaction(sig, {
+        commitment: "confirmed",
+        maxSupportedTransactionVersion: 0,
+      });
+      const txFee = txDetails?.meta?.fee ?? 5000;
+      const balanceAfter = await connection.getBalance(creatorWallet.publicKey);
+      const claimed = (balanceAfter - balanceBefore + txFee) / LAMPORTS_PER_SOL;
+
+      if (claimed > 0) {
+        totalClaimed += claimed;
+        lastTx = sig;
+        console.log(`claimCreatorFees (pAMM): claimed ${claimed} SOL (tx: ${sig})`);
+      }
+    }
+  } catch (err) {
+    console.error("claimCreatorFees (pAMM) error:", err);
+  }
+
+  if (totalClaimed > 0) {
+    console.log(`claimCreatorFees: total claimed ${totalClaimed} SOL`);
+  }
+  return { tx: lastTx, totalClaimed };
 }
 
 /** Buy back 777 tokens via PumpPortal and burn them. */
@@ -263,12 +445,15 @@ export async function buybackAndBurn(
       tokensBurned: 0n,
     };
   }
+  const mint = getTokenMintAddress();
+  if (!mint) throw new Error("Token mint address not configured");
+
   // Step 1: Buy tokens via PumpPortal
   const buybackTx = await pumpPortalTrade(
     {
       publicKey: creatorWallet.publicKey.toBase58(),
       action: "buy",
-      mint: tokenMintAddress.toBase58(),
+      mint: mint.toBase58(),
       amount: solAmount,
       denominatedInSol: "true",
       slippage: BUYBACK_SLIPPAGE,
@@ -283,7 +468,7 @@ export async function buybackAndBurn(
   // Step 2: Burn all tokens in creator wallet's ATA
   const tokenProgram = await getTokenProgram();
   const ata = await getAssociatedTokenAddress(
-    tokenMintAddress,
+    mint,
     creatorWallet.publicKey,
     false,
     tokenProgram,
@@ -298,7 +483,7 @@ export async function buybackAndBurn(
 
   const burnIx = createBurnCheckedInstruction(
     ata,
-    tokenMintAddress,
+    mint,
     creatorWallet.publicKey,
     tokensBurned,
     PUMPFUN_TOKEN_DECIMALS,

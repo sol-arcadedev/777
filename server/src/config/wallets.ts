@@ -39,12 +39,34 @@ export const creatorWallet = loadKeypair("CREATOR_WALLET_PRIVATE_KEY");
 export const rewardWallet = loadKeypair("REWARD_WALLET_PRIVATE_KEY");
 
 export const treasuryAddress = loadPublicKey("TREASURY_WALLET_ADDRESS");
-export const tokenMintAddress = loadPublicKey("TOKEN_MINT_ADDRESS");
+
+// Token mint address is dynamic — set via admin panel, stored in DB.
+let _tokenMintAddress: PublicKey | null = null;
+
+/** Get the current token mint address (null if not yet configured). */
+export function getTokenMintAddress(): PublicKey | null {
+  return _tokenMintAddress;
+}
+
+/** Update the in-memory token mint address (called when admin sets tokenCA). */
+export function setTokenMintAddress(address: string | null): void {
+  if (!address || address === "To be added") {
+    _tokenMintAddress = null;
+    console.log("Token Mint: not set");
+    return;
+  }
+  try {
+    _tokenMintAddress = new PublicKey(address);
+    console.log(`Token Mint:   ${_tokenMintAddress.toBase58()}`);
+  } catch {
+    console.error(`Invalid token mint address: ${address}`);
+    _tokenMintAddress = null;
+  }
+}
 
 console.log("Wallets loaded:");
 console.log(`  Verification: ${verificationWallet.publicKey.toBase58()}`);
 console.log(`  Creator:      ${creatorWallet.publicKey.toBase58()}`);
 console.log(`  Reward:       ${rewardWallet.publicKey.toBase58()}`);
 console.log(`  Treasury:     ${treasuryAddress.toBase58()}`);
-console.log(`  Token Mint:   ${tokenMintAddress.toBase58()}`);
 console.log(`  RPC:          ${rpcUrl}`);
