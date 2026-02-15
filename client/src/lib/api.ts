@@ -35,6 +35,10 @@ export function getWinners(limit = 20) {
   return fetchJSON<WinnerHistoryEntry[]>(`${API_BASE}/winners?limit=${limit}`);
 }
 
+export function getRewardBalance() {
+  return fetchJSON<{ balanceSol: number }>(`${API_BASE}/reward-balance`);
+}
+
 export function triggerTransfer() {
   return fetchJSON<{ message: string }>(`${API_BASE}/admin/trigger-transfer`, {
     method: "POST",

@@ -1,4 +1,4 @@
-import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry } from "@shared/types";
+import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent } from "@shared/types";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
 import SlotDisplay from "./SlotDisplay";
@@ -13,9 +13,12 @@ interface LayoutProps {
   activeSpin: QueueEntry | null;
   waiting: QueueEntry[];
   winners: WinnerHistoryEntry[];
+  rewardBalance: number | null;
+  spinResult: SpinResultEvent | null;
+  onSpinResultDone: () => void;
 }
 
-export default function Layout({ config, activeSpin, waiting, winners }: LayoutProps) {
+export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone }: LayoutProps) {
   const isSpinning = activeSpin !== null;
 
   return (
@@ -34,11 +37,20 @@ export default function Layout({ config, activeSpin, waiting, winners }: LayoutP
 
         {/* Center column: Slot Machine */}
         <div className="flex flex-col items-center justify-center gap-4">
-          <SlotMachine isSpinning={isSpinning} paused={config.paused} minSolTransfer={config.minSolTransfer} />
+          <SlotMachine
+            isSpinning={isSpinning}
+            paused={config.paused}
+            minSolTransfer={config.minSolTransfer}
+            spinResult={spinResult}
+            onResultDone={onSpinResultDone}
+          />
           <SlotDisplay activeSpin={activeSpin} />
           <div className="flex gap-4 w-full max-w-md">
             <div className="flex-1">
-              <RewardDisplay rewardPercent={config.rewardPercent} />
+              <RewardDisplay
+                rewardPercent={config.rewardPercent}
+                balanceSol={rewardBalance}
+              />
             </div>
             <div className="flex-1">
               <CountdownTimer expiresAt={config.timerExpiresAt} />

@@ -1,10 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useConfig } from "./hooks/useConfig";
 import { useQueue } from "./hooks/useQueue";
 import { useWinners } from "./hooks/useWinners";
+import { useWebSocket } from "./hooks/useWebSocket";
+import { getRewardBalance } from "./lib/api";
 import Layout from "./components/Layout";
 import AdminPanel from "./components/admin/AdminPanel";
 import NotificationToast from "./components/NotificationToast";
+import type { SpinResultEvent, WsServerMessage } from "@shared/types";
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash);
@@ -20,9 +23,43 @@ function useHashRoute() {
 
 function App() {
   const hash = useHashRoute();
-  const { config, updateConfig } = useConfig();
-  const { activeSpin, waiting, newEntries, clearNewEntries } = useQueue();
-  const { winners } = useWinners();
+  const { config, updateConfig, applyConfig } = useConfig();
+  const { activeSpin, waiting, newEntries, clearNewEntries, applyQueue } = useQueue();
+  const { winners, applyWinners } = useWinners();
+  const [rewardBalance, setRewardBalance] = useState<number | null>(null);
+  const [spinResult, setSpinResult] = useState<SpinResultEvent | null>(null);
+
+  // Fetch initial reward balance
+  useEffect(() => {
+    getRewardBalance()
+      .then((data) => setRewardBalance(data.balanceSol))
+      .catch(() => {});
+  }, []);
+
+  const onWsMessage = useCallback(
+    (msg: WsServerMessage) => {
+      switch (msg.type) {
+        case "queue:update":
+          applyQueue(msg.data);
+          break;
+        case "winners:update":
+          applyWinners(msg.data);
+          break;
+        case "config:update":
+          applyConfig(msg.data);
+          break;
+        case "spin:result":
+          setSpinResult(msg.data);
+          break;
+        case "reward:balance":
+          setRewardBalance(msg.data.balanceSol);
+          break;
+      }
+    },
+    [applyQueue, applyWinners, applyConfig],
+  );
+
+  useWebSocket(onWsMessage);
 
   if (!config) {
     return (
@@ -43,6 +80,9 @@ function App() {
         activeSpin={activeSpin}
         waiting={waiting}
         winners={winners}
+        rewardBalance={rewardBalance}
+        spinResult={spinResult}
+        onSpinResultDone={() => setSpinResult(null)}
       />
       <NotificationToast newEntries={newEntries} onConsumed={clearNewEntries} />
     </>

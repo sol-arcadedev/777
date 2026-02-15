@@ -1,6 +1,8 @@
 import { Router } from "express";
 import prisma from "../lib/db.js";
 import { serializeConfig } from "../lib/serialize.js";
+import { getRewardWalletBalance } from "../services/solana.js";
+import { wsBroadcaster } from "../services/wsServer.js";
 import type { UpdateConfigRequest } from "@shared/types";
 
 const router = Router();
@@ -56,10 +58,22 @@ router.put("/api/config", async (req, res) => {
       where: { id: 1 },
       data,
     });
-    res.json(serializeConfig(config));
+    const serialized = serializeConfig(config);
+    wsBroadcaster.broadcast({ type: "config:update", data: serialized });
+    res.json(serialized);
   } catch (err) {
     console.error("PUT /api/config error:", err);
     res.status(500).json({ error: "Failed to update configuration" });
+  }
+});
+
+router.get("/api/reward-balance", async (_req, res) => {
+  try {
+    const balanceSol = await getRewardWalletBalance();
+    res.json({ balanceSol });
+  } catch (err) {
+    console.error("GET /api/reward-balance error:", err);
+    res.status(500).json({ error: "Failed to fetch reward balance" });
   }
 });
 

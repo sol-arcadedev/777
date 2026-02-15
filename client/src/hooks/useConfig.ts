@@ -29,5 +29,9 @@ export function useConfig() {
     return updated;
   }, []);
 
-  return { config, error, updateConfig: updateConfigFn, refetch: fetchConfig };
+  const applyConfig = useCallback((data: ConfigurationDTO) => {
+    setConfig(data);
+  }, []);
+
+  return { config, error, updateConfig: updateConfigFn, refetch: fetchConfig, applyConfig };
 }

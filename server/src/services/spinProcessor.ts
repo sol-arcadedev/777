@@ -1,10 +1,12 @@
 import prisma from "../lib/db.js";
+import { getQueueEntries, getWinnerEntries } from "../lib/queries.js";
 import { determineResult } from "./spinLogic.js";
 import {
   checkTokenBalance,
   getRewardWalletBalance,
   transferReward,
 } from "./solana.js";
+import { wsBroadcaster } from "./wsServer.js";
 
 const PROCESS_INTERVAL_MS = 2000;
 
@@ -82,6 +84,23 @@ class QueueProcessor {
         data: { result: "LOSE" },
       });
       console.log(`Spin #${spinId}: LOSE (insufficient tokens)`);
+
+      wsBroadcaster.broadcast({
+        type: "spin:result",
+        data: {
+          spinId,
+          holderAddress: spin.holderAddress,
+          result: "LOSE",
+          solTransferred: spin.solTransferred,
+          winChance: spin.winChance,
+          rewardSol: null,
+          txSignature: null,
+        },
+      });
+      wsBroadcaster.broadcast({
+        type: "queue:update",
+        data: await getQueueEntries(),
+      });
       return;
     }
 
@@ -112,12 +131,55 @@ class QueueProcessor {
       console.log(
         `Spin #${spinId}: WIN — ${rewardSol.toFixed(4)} SOL → ${spin.holderAddress}`,
       );
+
+      const newBalance = await getRewardWalletBalance();
+      wsBroadcaster.broadcast({
+        type: "spin:result",
+        data: {
+          spinId,
+          holderAddress: spin.holderAddress,
+          result: "WIN",
+          solTransferred: spin.solTransferred,
+          winChance: spin.winChance,
+          rewardSol,
+          txSignature,
+        },
+      });
+      wsBroadcaster.broadcast({
+        type: "queue:update",
+        data: await getQueueEntries(),
+      });
+      wsBroadcaster.broadcast({
+        type: "winners:update",
+        data: await getWinnerEntries(),
+      });
+      wsBroadcaster.broadcast({
+        type: "reward:balance",
+        data: { balanceSol: newBalance },
+      });
     } else {
       await prisma.spinTransaction.update({
         where: { id: spinId },
         data: { result: "LOSE" },
       });
       console.log(`Spin #${spinId}: LOSE`);
+
+      wsBroadcaster.broadcast({
+        type: "spin:result",
+        data: {
+          spinId,
+          holderAddress: spin.holderAddress,
+          result: "LOSE",
+          solTransferred: spin.solTransferred,
+          winChance: spin.winChance,
+          rewardSol: null,
+          txSignature: null,
+        },
+      });
+      wsBroadcaster.broadcast({
+        type: "queue:update",
+        data: await getQueueEntries(),
+      });
     }
   }
 }

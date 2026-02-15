@@ -21,5 +21,9 @@ export function useWinners() {
     return () => clearInterval(id);
   }, [fetchWinners]);
 
-  return { winners };
+  const applyWinners = useCallback((data: WinnerHistoryEntry[]) => {
+    setWinners(data);
+  }, []);
+
+  return { winners, applyWinners };
 }

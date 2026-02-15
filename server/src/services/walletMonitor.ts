@@ -3,6 +3,8 @@ import { connection, verificationWallet } from "../config/wallets.js";
 import { checkTokenBalance } from "./solana.js";
 import { calculateWinChance } from "./spinLogic.js";
 import { queueProcessor } from "./spinProcessor.js";
+import { wsBroadcaster } from "./wsServer.js";
+import { getQueueEntries } from "../lib/queries.js";
 import prisma from "../lib/db.js";
 
 const MAX_RECONNECT_ATTEMPTS = 10;
@@ -123,6 +125,11 @@ class WalletMonitor {
       });
 
       queueProcessor.enqueue(spin.id);
+
+      wsBroadcaster.broadcast({
+        type: "queue:update",
+        data: await getQueueEntries(),
+      });
 
       console.log(
         `WalletMonitor: queued spin #${spin.id} for ${sender} (${solAmount} SOL, ${winChance}% chance, pos ${queuePosition})`,

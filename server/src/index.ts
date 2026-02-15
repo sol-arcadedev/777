@@ -6,6 +6,7 @@ import { queueProcessor } from "./services/spinProcessor.js";
 import { startFeeClaimLoop } from "./services/feeClaimLoop.js";
 import { startBuybackTimerLoop } from "./services/buybackTimerLoop.js";
 import { walletMonitor } from "./services/walletMonitor.js";
+import { wsBroadcaster } from "./services/wsServer.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -21,8 +22,11 @@ app.get("/api/health", (_req, res) => {
 
 app.use(router);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+
+  wsBroadcaster.attach(server);
+
   queueProcessor.start().catch((err) => {
     console.error("Failed to start QueueProcessor:", err);
   });

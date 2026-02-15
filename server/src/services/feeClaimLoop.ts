@@ -1,9 +1,11 @@
 import prisma from "../lib/db.js";
 import {
   claimCreatorFees,
+  getRewardWalletBalance,
   transferToTreasury,
   transferToReward,
 } from "./solana.js";
+import { wsBroadcaster } from "./wsServer.js";
 
 const FEE_CLAIM_INTERVAL_MS = 30_000;
 
@@ -36,6 +38,12 @@ async function claimFees(): Promise<void> {
     console.log(
       `Fee claim: ${totalClaimed} SOL claimed — ${treasuryAmount} to Treasury, ${rewardAmount} to Reward`,
     );
+
+    const newBalance = await getRewardWalletBalance();
+    wsBroadcaster.broadcast({
+      type: "reward:balance",
+      data: { balanceSol: newBalance },
+    });
   } catch (err) {
     console.error("Fee claim loop error:", err);
   }

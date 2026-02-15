@@ -9,37 +9,39 @@ export function useQueue() {
   const [newEntries, setNewEntries] = useState<QueueEntry[]>([]);
   const prevAddressesRef = useRef<Set<string> | null>(null);
 
+  const applyEntries = useCallback((entries: QueueEntry[]) => {
+    const currentKeys = new Set(
+      entries.map((e) => `${e.holderAddress}:${e.queuePosition}`)
+    );
+
+    if (prevAddressesRef.current !== null) {
+      const added = entries.filter(
+        (e) => !prevAddressesRef.current!.has(`${e.holderAddress}:${e.queuePosition}`)
+      );
+      if (added.length > 0) {
+        setNewEntries(added);
+      }
+    }
+
+    prevAddressesRef.current = currentKeys;
+
+    if (entries.length > 0) {
+      setActiveSpin(entries[0]);
+      setWaiting(entries.slice(1));
+    } else {
+      setActiveSpin(null);
+      setWaiting([]);
+    }
+  }, []);
+
   const fetchQueue = useCallback(async () => {
     try {
       const entries = await getQueue();
-
-      // Detect new entries by comparing holder+position keys
-      const currentKeys = new Set(
-        entries.map((e) => `${e.holderAddress}:${e.queuePosition}`)
-      );
-
-      if (prevAddressesRef.current !== null) {
-        const added = entries.filter(
-          (e) => !prevAddressesRef.current!.has(`${e.holderAddress}:${e.queuePosition}`)
-        );
-        if (added.length > 0) {
-          setNewEntries(added);
-        }
-      }
-
-      prevAddressesRef.current = currentKeys;
-
-      if (entries.length > 0) {
-        setActiveSpin(entries[0]);
-        setWaiting(entries.slice(1));
-      } else {
-        setActiveSpin(null);
-        setWaiting([]);
-      }
+      applyEntries(entries);
     } catch {
       // silently retry on next poll
     }
-  }, []);
+  }, [applyEntries]);
 
   useEffect(() => {
     fetchQueue();
@@ -47,5 +49,9 @@ export function useQueue() {
     return () => clearInterval(id);
   }, [fetchQueue]);
 
-  return { activeSpin, waiting, newEntries, clearNewEntries: () => setNewEntries([]) };
+  const applyQueue = useCallback((entries: QueueEntry[]) => {
+    applyEntries(entries);
+  }, [applyEntries]);
+
+  return { activeSpin, waiting, newEntries, clearNewEntries: () => setNewEntries([]), applyQueue };
 }

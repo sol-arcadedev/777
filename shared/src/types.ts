@@ -143,6 +143,25 @@ export interface SubmitSpinResponse {
   winChance: number;
 }
 
+// ─── WebSocket Messages ─────────────────────────────────
+
+export interface SpinResultEvent {
+  spinId: number;
+  holderAddress: string;
+  result: "WIN" | "LOSE";
+  solTransferred: number;
+  winChance: number;
+  rewardSol: number | null;
+  txSignature: string | null;
+}
+
+export type WsServerMessage =
+  | { type: "queue:update"; data: QueueEntry[] }
+  | { type: "winners:update"; data: WinnerHistoryEntry[] }
+  | { type: "config:update"; data: ConfigurationDTO }
+  | { type: "spin:result"; data: SpinResultEvent }
+  | { type: "reward:balance"; data: { balanceSol: number } };
+
 // ─── Admin Config Update Request ─────────────────────────
 
 export interface UpdateConfigRequest {

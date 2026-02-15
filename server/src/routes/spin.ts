@@ -1,9 +1,10 @@
 import { Router } from "express";
 import prisma from "../lib/db.js";
 import { serializeSpin } from "../lib/serialize.js";
+import { getQueueEntries } from "../lib/queries.js";
 import { calculateWinChance } from "../services/spinLogic.js";
 import { queueProcessor } from "../services/spinProcessor.js";
-import type { QueueEntry, SubmitSpinRequest, SubmitSpinResponse } from "@shared/types";
+import type { SubmitSpinRequest, SubmitSpinResponse } from "@shared/types";
 
 const router = Router();
 
@@ -23,18 +24,7 @@ router.get("/api/spins", async (req, res) => {
 
 router.get("/api/queue", async (_req, res) => {
   try {
-    const pending = await prisma.spinTransaction.findMany({
-      where: { result: "PENDING" },
-      orderBy: { queuePosition: "asc" },
-    });
-
-    const queue: QueueEntry[] = pending.map((s) => ({
-      holderAddress: s.holderAddress,
-      solTransferred: s.solTransferred,
-      winChance: s.winChance,
-      queuePosition: s.queuePosition,
-    }));
-
+    const queue = await getQueueEntries();
     res.json(queue);
   } catch (err) {
     console.error("GET /api/queue error:", err);
