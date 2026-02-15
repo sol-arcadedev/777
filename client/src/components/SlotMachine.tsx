@@ -1,6 +1,9 @@
+import SpinButton from "./SpinButton";
+
 interface SlotMachineProps {
   isSpinning: boolean;
   paused: boolean;
+  minSolTransfer: number;
 }
 
 function Reel({ spinning }: { spinning: boolean }) {
@@ -22,7 +25,7 @@ function Reel({ spinning }: { spinning: boolean }) {
   );
 }
 
-export default function SlotMachine({ isSpinning, paused }: SlotMachineProps) {
+export default function SlotMachine({ isSpinning, paused, minSolTransfer }: SlotMachineProps) {
   return (
     <div className={`flex flex-col items-center gap-4 p-6 bg-casino-card border border-casino-border rounded-xl ${isSpinning ? "animate-glow" : ""}`}>
       <div className="text-xs uppercase tracking-widest text-gold-dim">
@@ -40,6 +43,8 @@ export default function SlotMachine({ isSpinning, paused }: SlotMachineProps) {
           Slot machine is paused — spins are still queued
         </div>
       )}
+
+      <SpinButton minSolTransfer={minSolTransfer} paused={paused} />
     </div>
   );
 }
