@@ -11,6 +11,8 @@ import {
   getAssociatedTokenAddress,
   getAccount,
   createBurnCheckedInstruction,
+  TOKEN_PROGRAM_ID,
+  TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
   connection,
@@ -23,6 +25,14 @@ import {
 
 const DEV_MODE = process.env.DEV_MODE === "true";
 
+/** Detect whether a mint uses classic SPL Token or Token-2022. */
+async function getTokenProgram(): Promise<PublicKey> {
+  const info = await connection.getAccountInfo(tokenMintAddress);
+  if (!info) throw new Error("Token mint account not found");
+  if (info.owner.equals(TOKEN_2022_PROGRAM_ID)) return TOKEN_2022_PROGRAM_ID;
+  return TOKEN_PROGRAM_ID;
+}
+
 /** Check if a holder has the required token balance. */
 export async function checkTokenBalance(
   holderAddress: string,
@@ -34,8 +44,9 @@ export async function checkTokenBalance(
   }
   try {
     const owner = new PublicKey(holderAddress);
-    const ata = await getAssociatedTokenAddress(tokenMintAddress, owner);
-    const account = await getAccount(connection, ata);
+    const tokenProgram = await getTokenProgram();
+    const ata = await getAssociatedTokenAddress(tokenMintAddress, owner, false, tokenProgram);
+    const account = await getAccount(connection, ata, "confirmed", tokenProgram);
     return account.amount >= requiredAmount;
   } catch (err: unknown) {
     // TokenAccountNotFoundError or TokenInvalidAccountOwnerError
@@ -255,7 +266,7 @@ export async function buybackAndBurn(
       denominatedInSol: "true",
       slippage: BUYBACK_SLIPPAGE,
       priorityFee: PRIORITY_FEE,
-      pool: "pump",
+      pool: "auto",
     },
     creatorWallet,
   );
@@ -263,11 +274,14 @@ export async function buybackAndBurn(
   console.log(`buybackAndBurn: bought tokens for ${solAmount} SOL (tx: ${buybackTx})`);
 
   // Step 2: Burn all tokens in creator wallet's ATA
+  const tokenProgram = await getTokenProgram();
   const ata = await getAssociatedTokenAddress(
     tokenMintAddress,
     creatorWallet.publicKey,
+    false,
+    tokenProgram,
   );
-  const tokenAccount = await getAccount(connection, ata);
+  const tokenAccount = await getAccount(connection, ata, "confirmed", tokenProgram);
   const tokensBurned = tokenAccount.amount;
 
   if (tokensBurned === 0n) {
@@ -281,6 +295,8 @@ export async function buybackAndBurn(
     creatorWallet.publicKey,
     tokensBurned,
     PUMPFUN_TOKEN_DECIMALS,
+    [],
+    tokenProgram,
   );
 
   const burnTxObj = new Transaction().add(burnIx);
