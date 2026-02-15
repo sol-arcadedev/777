@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import router from "./routes/index.js";
 import { queueProcessor } from "./services/spinProcessor.js";
 import { startFeeClaimLoop } from "./services/feeClaimLoop.js";
+import { startBuybackTimerLoop } from "./services/buybackTimerLoop.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -25,4 +26,5 @@ app.listen(PORT, () => {
     console.error("Failed to start QueueProcessor:", err);
   });
   startFeeClaimLoop();
+  startBuybackTimerLoop();
 });

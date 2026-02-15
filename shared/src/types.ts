@@ -11,6 +11,7 @@ export interface Configuration {
   minSolTransfer: number;
   rewardPercent: number;
   timerDurationSec: number;
+  timerExpiresAt: Date | null;
   paused: boolean;
   updatedAt: Date;
 }
@@ -64,6 +65,7 @@ export interface ConfigurationDTO {
   minSolTransfer: number;
   rewardPercent: number;
   timerDurationSec: number;
+  timerExpiresAt: string | null;
   paused: boolean;
   updatedAt: string;
 }

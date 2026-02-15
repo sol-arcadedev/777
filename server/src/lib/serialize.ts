@@ -17,6 +17,7 @@ export function serializeConfig(config: Configuration): ConfigurationDTO {
     minSolTransfer: config.minSolTransfer,
     rewardPercent: config.rewardPercent,
     timerDurationSec: config.timerDurationSec,
+    timerExpiresAt: config.timerExpiresAt?.toISOString() ?? null,
     paused: config.paused,
     updatedAt: config.updatedAt.toISOString(),
   };

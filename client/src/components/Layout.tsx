@@ -41,7 +41,7 @@ export default function Layout({ config, activeSpin, waiting, winners }: LayoutP
               <RewardDisplay rewardPercent={config.rewardPercent} />
             </div>
             <div className="flex-1">
-              <CountdownTimer durationSec={config.timerDurationSec} />
+              <CountdownTimer expiresAt={config.timerExpiresAt} />
             </div>
           </div>
         </div>

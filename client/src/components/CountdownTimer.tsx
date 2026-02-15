@@ -1,11 +1,11 @@
 import { useCountdown } from "../hooks/useCountdown";
 
 interface CountdownTimerProps {
-  durationSec: number;
+  expiresAt: string | null;
 }
 
-export default function CountdownTimer({ durationSec }: CountdownTimerProps) {
-  const { display } = useCountdown(durationSec);
+export default function CountdownTimer({ expiresAt }: CountdownTimerProps) {
+  const { display } = useCountdown(expiresAt);
 
   return (
     <div className="text-center bg-casino-card border border-casino-border rounded-lg px-4 py-3">

@@ -7,11 +7,24 @@ const router = Router();
 
 router.get("/api/config", async (_req, res) => {
   try {
-    const config = await prisma.configuration.upsert({
+    let config = await prisma.configuration.upsert({
       where: { id: 1 },
       update: {},
       create: {},
     });
+
+    // Initialize timerExpiresAt if not set yet
+    if (!config.timerExpiresAt) {
+      config = await prisma.configuration.update({
+        where: { id: 1 },
+        data: {
+          timerExpiresAt: new Date(
+            Date.now() + config.timerDurationSec * 1000,
+          ),
+        },
+      });
+    }
+
     res.json(serializeConfig(config));
   } catch (err) {
     console.error("GET /api/config error:", err);
@@ -31,8 +44,12 @@ router.put("/api/config", async (req, res) => {
       data.minSolTransfer = body.minSolTransfer;
     if (body.rewardPercent !== undefined)
       data.rewardPercent = body.rewardPercent;
-    if (body.timerDurationSec !== undefined)
+    if (body.timerDurationSec !== undefined) {
       data.timerDurationSec = body.timerDurationSec;
+      data.timerExpiresAt = new Date(
+        Date.now() + body.timerDurationSec * 1000,
+      );
+    }
     if (body.paused !== undefined) data.paused = body.paused;
 
     const config = await prisma.configuration.update({

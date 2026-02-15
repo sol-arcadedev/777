@@ -1,19 +1,29 @@
 import { useState, useEffect } from "react";
 
-export function useCountdown(durationSec: number) {
-  const [remaining, setRemaining] = useState(durationSec);
+export function useCountdown(expiresAt: string | null) {
+  const [remaining, setRemaining] = useState(0);
 
   useEffect(() => {
-    setRemaining(durationSec);
-  }, [durationSec]);
+    if (!expiresAt) {
+      setRemaining(0);
+      return;
+    }
 
-  useEffect(() => {
-    if (remaining <= 0) return;
+    function calcRemaining() {
+      return Math.max(
+        0,
+        Math.floor((new Date(expiresAt!).getTime() - Date.now()) / 1000),
+      );
+    }
+
+    setRemaining(calcRemaining());
+
     const id = setInterval(() => {
-      setRemaining((prev) => Math.max(0, prev - 1));
+      setRemaining(calcRemaining());
     }, 1_000);
+
     return () => clearInterval(id);
-  }, [remaining > 0]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [expiresAt]);
 
   const hours = Math.floor(remaining / 3600);
   const minutes = Math.floor((remaining % 3600) / 60);

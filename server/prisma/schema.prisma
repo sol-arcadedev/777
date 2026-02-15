@@ -20,6 +20,7 @@ model Configuration {
   minSolTransfer   Float    @default(0.01)
   rewardPercent    Float    @default(30.0)
   timerDurationSec Int      @default(300)
+  timerExpiresAt   DateTime?
   paused           Boolean  @default(false)
   updatedAt        DateTime @updatedAt
 }
