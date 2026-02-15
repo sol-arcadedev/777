@@ -21,11 +21,17 @@ import {
   tokenMintAddress,
 } from "../config/wallets.js";
 
+const DEV_MODE = process.env.DEV_MODE === "true";
+
 /** Check if a holder has the required token balance. */
 export async function checkTokenBalance(
   holderAddress: string,
   requiredAmount: bigint,
 ): Promise<boolean> {
+  if (DEV_MODE) {
+    console.log(`[DEV_MODE] checkTokenBalance: skipping SPL check, returning true`);
+    return true;
+  }
   try {
     const owner = new PublicKey(holderAddress);
     const ata = await getAssociatedTokenAddress(tokenMintAddress, owner);
@@ -199,6 +205,10 @@ export async function claimCreatorFees(): Promise<{
   tx: string;
   totalClaimed: number;
 }> {
+  if (DEV_MODE) {
+    console.log(`[DEV_MODE] claimCreatorFees: skipping PumpPortal call`);
+    return { tx: `dev-mock-claim-${Date.now()}`, totalClaimed: 0 };
+  }
   try {
     const balanceBefore = await connection.getBalance(creatorWallet.publicKey);
 
@@ -227,6 +237,14 @@ export async function claimCreatorFees(): Promise<{
 export async function buybackAndBurn(
   solAmount: number,
 ): Promise<{ buybackTx: string; burnTx: string; tokensBurned: bigint }> {
+  if (DEV_MODE) {
+    console.log(`[DEV_MODE] buybackAndBurn: skipping PumpPortal buy + burn for ${solAmount} SOL`);
+    return {
+      buybackTx: `dev-mock-buyback-${Date.now()}`,
+      burnTx: `dev-mock-burn-${Date.now()}`,
+      tokensBurned: 0n,
+    };
+  }
   // Step 1: Buy tokens via PumpPortal
   const buybackTx = await pumpPortalTrade(
     {
