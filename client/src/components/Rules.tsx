@@ -5,25 +5,32 @@ interface RulesProps {
 
 export default function Rules({ requiredHoldings, minSolTransfer }: RulesProps) {
   return (
-    <div className="bg-casino-card border border-casino-border rounded-xl p-4">
-      <h2 className="text-sm uppercase tracking-wider text-gold-dim mb-3">
-        How to Play
+    <div
+      className="p-3"
+      style={{
+        background: "linear-gradient(180deg, #0a0a0a 0%, #111 100%)",
+        border: "3px solid #daa520",
+        boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+      }}
+    >
+      <h2 className="text-[9px] uppercase tracking-wider text-gold mb-2">
+        HOW TO PLAY
       </h2>
-      <ol className="text-xs text-neutral-400 space-y-2 list-decimal list-inside">
+      <ol className="text-[7px] text-cream/70 space-y-2 list-decimal list-inside">
         <li>
-          Hold at least <span className="text-white">{Number(requiredHoldings).toLocaleString()}</span> 777 tokens
+          HOLD <span className="text-gold">{Number(requiredHoldings).toLocaleString()}</span> 777 TOKENS
         </li>
         <li>
-          Send minimum <span className="text-white">{minSolTransfer} SOL</span> to the Verification Wallet
+          SEND MIN <span className="text-gold">{minSolTransfer} SOL</span> TO VERIFICATION WALLET
         </li>
         <li>
-          Base win chance is <span className="text-win-green">3%</span>. Each extra 0.01 SOL adds +1% (max 5%)
+          BASE WIN: <span className="text-win-green">3%</span> | +1% PER 0.01 SOL (MAX 5%)
         </li>
         <li>
-          Winners receive a % of the Reward Wallet balance automatically
+          WINNERS GET % OF REWARD WALLET
         </li>
         <li>
-          If the machine is busy, you're placed in a queue
+          BUSY? YOU JOIN THE QUEUE
         </li>
       </ol>
     </div>

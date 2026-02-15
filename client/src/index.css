@@ -1,18 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  --color-casino-black: #0a0a0a;
-  --color-casino-dark: #141414;
-  --color-casino-card: #1a1a1a;
-  --color-casino-border: #2a2a2a;
-  --color-gold: #fbbf24;
-  --color-gold-dim: #b8860b;
-  --color-gold-bright: #fde68a;
-  --color-win-green: #22c55e;
-  --color-lose-red: #ef4444;
+  --color-casino-black: #1a0f00;
+  --color-casino-dark: #120a00;
+  --color-casino-card: #0d5e2e;
+  --color-casino-border: #2a6e3f;
+  --color-casino-felt: #0d5e2e;
+  --color-gold: #ffd700;
+  --color-gold-dim: #daa520;
+  --color-gold-bright: #ffe44d;
+  --color-win-green: #00ff41;
+  --color-lose-red: #ff2020;
+  --color-cream: #f5e6c8;
+  --color-maroon: #8b0000;
+  --color-brass: #b5a642;
 }
 
 @keyframes spin-reel {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes reel-spin-pixel {
   0% { transform: translateY(0); }
   100% { transform: translateY(-100%); }
 }
@@ -23,20 +32,28 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 8px var(--color-gold-dim); }
-  50% { box-shadow: 0 0 24px var(--color-gold); }
+  0%, 100% { box-shadow: 0 0 4px var(--color-gold-dim), inset 0 0 4px rgba(218,165,32,0.1); }
+  50% { box-shadow: 0 0 12px var(--color-gold), inset 0 0 8px rgba(255,215,0,0.15); }
 }
 
 @keyframes win-glow-anim {
-  0% { box-shadow: 0 0 10px var(--color-win-green); }
-  50% { box-shadow: 0 0 40px var(--color-win-green), 0 0 80px rgba(34, 197, 94, 0.3); }
-  100% { box-shadow: 0 0 10px var(--color-win-green); }
+  0%, 100% { box-shadow: 0 0 6px var(--color-win-green); }
+  50% { box-shadow: 0 0 24px var(--color-win-green), 0 0 48px rgba(0,255,65,0.3); }
 }
 
 @keyframes lose-flash-anim {
-  0%, 100% { border-color: var(--color-casino-border); }
-  15%, 45%, 75% { border-color: var(--color-lose-red); }
-  30%, 60% { border-color: var(--color-casino-border); }
+  0% { border-color: var(--color-casino-border); }
+  25% { border-color: var(--color-lose-red); }
+  50% { border-color: var(--color-casino-border); }
+  75% { border-color: var(--color-lose-red); }
+  100% { border-color: var(--color-casino-border); }
+}
+
+@keyframes pixel-flash-win {
+  0%, 100% { box-shadow: 0 0 0 2px var(--color-win-green); }
+  25% { box-shadow: 0 0 0 4px var(--color-win-green); }
+  50% { box-shadow: 0 0 0 2px var(--color-gold); }
+  75% { box-shadow: 0 0 0 4px var(--color-win-green); }
 }
 
 @keyframes bounce-in-anim {
@@ -51,35 +68,57 @@
   100% { transform: translateY(300px) rotate(720deg); opacity: 0; }
 }
 
+@keyframes lever-pull {
+  0% { transform: rotate(0deg); }
+  40% { transform: rotate(45deg); }
+  100% { transform: rotate(0deg); }
+}
+
+@keyframes marquee-glow {
+  0%, 100% { text-shadow: 0 0 4px var(--color-gold-dim), 0 0 8px rgba(255,215,0,0.3); }
+  50% { text-shadow: 0 0 8px var(--color-gold), 0 0 20px rgba(255,215,0,0.5), 0 0 30px rgba(255,215,0,0.2); }
+}
+
 body {
   background-color: var(--color-casino-black);
-  color: white;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--color-cream);
+  font-family: "Press Start 2P", cursive;
+  font-size: 10px;
+  line-height: 1.6;
+  image-rendering: pixelated;
 }
 
 .animate-spin-reel {
-  animation: spin-reel 0.15s linear infinite;
+  animation: reel-spin-pixel 0.15s steps(3) infinite;
 }
 
 .animate-glow {
-  animation: glow-pulse 2s ease-in-out infinite;
+  animation: glow-pulse 2s steps(4) infinite;
 }
 
 .animate-slide-in-left {
-  animation: slide-in-left 0.3s ease-out;
+  animation: slide-in-left 0.3s steps(6);
 }
 
 .win-glow {
-  animation: win-glow-anim 1s ease-in-out infinite;
+  animation: pixel-flash-win 0.8s steps(4) infinite;
   border-color: var(--color-win-green);
 }
 
 .lose-flash {
-  animation: lose-flash-anim 0.8s ease-in-out;
+  animation: lose-flash-anim 0.8s steps(4);
 }
 
 .animate-bounce-in {
-  animation: bounce-in-anim 0.5s ease-out;
+  animation: bounce-in-anim 0.5s steps(8);
+}
+
+.animate-lever-pull {
+  animation: lever-pull 0.5s steps(6) forwards;
+}
+
+.animate-marquee-glow {
+  animation: marquee-glow 2s steps(4) infinite;
 }
 
 .confetti-particle {
@@ -87,6 +126,30 @@ body {
   top: -8px;
   width: 8px;
   height: 8px;
-  border-radius: 2px;
-  animation: confetti-fall 2s ease-in forwards;
+  border-radius: 0;
+  animation: confetti-fall 2s steps(20) forwards;
+}
+
+/* Pixel border utility */
+.pixel-border {
+  border: 3px solid var(--color-gold-dim);
+  box-shadow:
+    3px 3px 0 0 rgba(0,0,0,0.5),
+    inset 1px 1px 0 0 rgba(255,215,0,0.2);
+}
+
+.pixel-border-subtle {
+  border: 2px solid var(--color-casino-border);
+  box-shadow: 2px 2px 0 0 rgba(0,0,0,0.4);
+}
+
+/* Scrollbar styling for retro feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-casino-dark);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-gold-dim);
 }

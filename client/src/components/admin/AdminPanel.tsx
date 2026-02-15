@@ -30,29 +30,38 @@ function LoginForm({ onLogin }: { onLogin: () => void }) {
   };
 
   return (
-    <div className="min-h-screen bg-casino-black flex items-center justify-center">
-      <div className="bg-casino-card border border-casino-border rounded-xl p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gold mb-6 text-center">777 Admin</h1>
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen flex items-center justify-center"
+      style={{ background: "linear-gradient(180deg, #1a0f00 0%, #0f0800 100%)" }}>
+      <div
+        className="p-6 w-full max-w-sm"
+        style={{
+          background: "#0a0a0a",
+          border: "3px solid #daa520",
+          boxShadow: "4px 4px 0 rgba(0,0,0,0.5)",
+        }}
+      >
+        <h1 className="text-xl font-bold text-gold mb-4 text-center animate-marquee-glow">777 ADMIN</h1>
+        <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Admin password"
-            className="w-full bg-casino-dark border border-casino-border rounded px-4 py-2 text-white placeholder-neutral-500 focus:border-gold-dim focus:outline-none"
+            placeholder="PASSWORD"
+            className="w-full bg-casino-dark border-2 border-gold-dim px-3 py-2 text-[9px] text-cream placeholder-gold-dim/40 focus:border-gold focus:outline-none"
             autoFocus
           />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {error && <p className="text-lose-red text-[8px]">{error}</p>}
           <button
             type="submit"
             disabled={loading || !password}
-            className="w-full bg-gold text-casino-black font-semibold py-2 rounded hover:bg-gold-dim transition-colors disabled:opacity-50 cursor-pointer"
+            className="w-full bg-gold text-casino-dark font-bold py-2 text-[9px] hover:bg-gold-bright transition-colors disabled:opacity-50 cursor-pointer uppercase"
+            style={{ boxShadow: "2px 2px 0 rgba(0,0,0,0.5)" }}
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading ? "LOADING..." : "LOGIN"}
           </button>
         </form>
-        <a href="#" className="block text-center mt-4 text-sm text-neutral-500 hover:text-gold transition-colors">
-          ← Back to site
+        <a href="#" className="block text-center mt-3 text-[8px] text-gold-dim hover:text-gold transition-colors">
+          BACK TO SITE
         </a>
       </div>
     </div>
@@ -83,29 +92,44 @@ export default function AdminPanel({ config, onSave }: AdminPanelProps) {
   }
 
   return (
-    <div className="min-h-screen bg-casino-black p-8">
-      <div className="max-w-xl mx-auto space-y-8">
+    <div className="min-h-screen p-6"
+      style={{ background: "linear-gradient(180deg, #1a0f00 0%, #0f0800 100%)" }}>
+      <div className="max-w-xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gold">777 Admin</h1>
-          <div className="flex items-center gap-4">
+          <h1 className="text-xl font-bold text-gold animate-marquee-glow">777 ADMIN</h1>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => { clearAdminToken(); setAuthed(false); }}
-              className="text-sm text-neutral-500 hover:text-red-400 transition-colors cursor-pointer"
+              className="text-[8px] text-gold-dim hover:text-lose-red transition-colors cursor-pointer uppercase"
             >
-              Logout
+              LOGOUT
             </button>
-            <a href="#" className="text-sm text-neutral-500 hover:text-gold transition-colors">
-              ← Back to site
+            <a href="#" className="text-[8px] text-gold-dim hover:text-gold transition-colors uppercase">
+              BACK
             </a>
           </div>
         </div>
 
-        <div className="bg-casino-card border border-casino-border rounded-xl p-6">
-          <h2 className="text-sm uppercase tracking-wider text-gold-dim mb-4">Configuration</h2>
+        <div
+          className="p-4"
+          style={{
+            background: "#0a0a0a",
+            border: "3px solid #daa520",
+            boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+          }}
+        >
+          <h2 className="text-[9px] uppercase tracking-wider text-gold mb-3">CONFIGURATION</h2>
           <ConfigForm config={config} onSave={handleSave} />
         </div>
 
-        <div className="bg-casino-card border border-casino-border rounded-xl p-6">
+        <div
+          className="p-4"
+          style={{
+            background: "#0a0a0a",
+            border: "3px solid #daa520",
+            boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+          }}
+        >
           <AdminActions />
         </div>
       </div>

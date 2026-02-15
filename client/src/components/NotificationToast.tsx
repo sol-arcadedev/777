@@ -45,16 +45,21 @@ export default function NotificationToast({ newEntries, onConsumed }: Notificati
       {toasts.map((toast) => (
         <div
           key={toast.id}
-          className="animate-slide-in-left bg-casino-card border border-gold-dim rounded-lg px-4 py-3 shadow-lg max-w-xs"
+          className="animate-slide-in-left px-3 py-2 max-w-xs"
+          style={{
+            background: "#0a0a0a",
+            border: "2px solid #daa520",
+            boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+          }}
         >
-          <div className="text-xs uppercase tracking-widest text-gold mb-1">
-            New Spin Queued
+          <div className="text-[8px] uppercase tracking-widest text-gold mb-1">
+            NEW SPIN QUEUED
           </div>
-          <div className="text-sm text-white truncate">
+          <div className="text-[9px] text-cream truncate">
             {toast.entry.holderAddress.slice(0, 4)}...{toast.entry.holderAddress.slice(-4)}
           </div>
-          <div className="text-xs text-gold-dim mt-1">
-            {toast.entry.solTransferred} SOL — {toast.entry.winChance}% chance
+          <div className="text-[7px] text-gold-dim mt-1">
+            {toast.entry.solTransferred} SOL | {toast.entry.winChance}%
           </div>
         </div>
       ))}

@@ -22,12 +22,13 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
   const isSpinning = activeSpin !== null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-casino-black">
+    <div className="min-h-screen flex flex-col"
+      style={{ background: "linear-gradient(180deg, #1a0f00 0%, #0f0800 100%)" }}>
       <Header tokenCA={config.tokenCA} />
 
-      <main className="flex-1 grid grid-cols-[280px_1fr_300px] gap-4 p-4 max-w-[1920px] mx-auto w-full">
+      <main className="flex-1 grid grid-cols-[260px_1fr_280px] gap-3 p-3 max-w-[1920px] mx-auto w-full">
         {/* Left column: Queue + Rules */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-3">
           <QueueDisplay waiting={waiting} />
           <Rules
             requiredHoldings={config.requiredHoldings}
@@ -36,7 +37,7 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
         </div>
 
         {/* Center column: Slot Machine */}
-        <div className="flex flex-col items-center justify-center gap-4">
+        <div className="flex flex-col items-center justify-center gap-3">
           <SlotMachine
             isSpinning={isSpinning}
             paused={config.paused}
@@ -45,7 +46,7 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
             onResultDone={onSpinResultDone}
           />
           <SlotDisplay activeSpin={activeSpin} />
-          <div className="flex gap-4 w-full max-w-md">
+          <div className="flex gap-3 w-full max-w-md">
             <div className="flex-1">
               <RewardDisplay
                 rewardPercent={config.rewardPercent}

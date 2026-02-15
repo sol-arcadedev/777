@@ -21,48 +21,59 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="text-neutral-500 hover:text-gold transition-colors cursor-pointer"
+      className="text-gold-dim hover:text-gold transition-colors cursor-pointer text-[7px]"
       title="Copy address"
     >
-      {copied ? "ok" : "cp"}
+      {copied ? "OK" : "CP"}
     </button>
   );
 }
 
 export default function WinnerHistory({ winners }: WinnerHistoryProps) {
   return (
-    <div className="bg-casino-card border border-casino-border rounded-xl p-4">
-      <h2 className="text-sm uppercase tracking-wider text-gold-dim mb-3">
-        Winners
+    <div
+      className="p-3"
+      style={{
+        background: "linear-gradient(180deg, #0a0a0a 0%, #111 100%)",
+        border: "3px solid #daa520",
+        boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+      }}
+    >
+      <h2 className="text-[9px] uppercase tracking-wider text-gold mb-2">
+        RECENT REWARDS
       </h2>
 
       {winners.length === 0 ? (
-        <div className="text-sm text-neutral-500 text-center py-4">
-          No winners yet
+        <div className="text-[8px] text-gold-dim/50 text-center py-3">
+          NO REWARDS YET
         </div>
       ) : (
-        <div className="space-y-2 max-h-80 overflow-y-auto">
+        <div className="space-y-1 max-h-80 overflow-y-auto">
           {winners.map((w) => (
             <div
               key={w.rewardTxSignature}
-              className="bg-casino-dark rounded px-3 py-2 text-xs space-y-1"
+              className="px-2 py-1.5 text-[7px] space-y-0.5"
+              style={{
+                background: "#0d5e2e",
+                border: "1px solid #2a6e3f",
+              }}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <span className="text-gold">{formatAddress(w.holderAddress)}</span>
                   <CopyButton text={w.holderAddress} />
                 </div>
-                <span className="text-win-green font-semibold">+{w.solWon} SOL</span>
+                <span className="text-win-green font-bold">+{w.solWon} SOL</span>
               </div>
-              <div className="flex items-center justify-between text-neutral-500">
-                <span>Sent {w.solTransferred} SOL &middot; {w.winChance}% chance</span>
+              <div className="flex items-center justify-between text-gold-dim/60">
+                <span>SENT {w.solTransferred} SOL | {w.winChance}%</span>
                 <a
                   href={`${SOLSCAN_TX_URL}${w.rewardTxSignature}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gold-dim hover:text-gold transition-colors underline"
                 >
-                  tx
+                  TX
                 </a>
               </div>
             </div>

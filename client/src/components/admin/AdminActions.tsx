@@ -36,27 +36,29 @@ export default function AdminActions() {
   };
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-sm uppercase tracking-wider text-gold-dim">Actions</h3>
+    <div className="space-y-3">
+      <h3 className="text-[9px] uppercase tracking-wider text-gold">ACTIONS</h3>
 
       <div className="flex items-center gap-3">
         <button
           onClick={handleTransfer}
-          className="bg-casino-dark border border-casino-border px-4 py-2 rounded text-sm hover:border-gold-dim transition-colors cursor-pointer"
+          className="bg-casino-dark border-2 border-gold-dim px-3 py-2 text-[8px] text-cream hover:border-gold transition-colors cursor-pointer uppercase"
+          style={{ boxShadow: "2px 2px 0 rgba(0,0,0,0.4)" }}
         >
-          Transfer Verification → Creator
+          TRANSFER VERIFY -&gt; CREATOR
         </button>
-        {transferStatus && <span className="text-xs text-neutral-400">{transferStatus}</span>}
+        {transferStatus && <span className="text-[7px] text-gold-dim">{transferStatus}</span>}
       </div>
 
       <div className="flex items-center gap-3">
         <button
           onClick={handleBuyback}
-          className="bg-casino-dark border border-casino-border px-4 py-2 rounded text-sm hover:border-gold-dim transition-colors cursor-pointer"
+          className="bg-casino-dark border-2 border-gold-dim px-3 py-2 text-[8px] text-cream hover:border-gold transition-colors cursor-pointer uppercase"
+          style={{ boxShadow: "2px 2px 0 rgba(0,0,0,0.4)" }}
         >
-          Trigger Buyback & Burn
+          BUYBACK & BURN
         </button>
-        {buybackStatus && <span className="text-xs text-neutral-400">{buybackStatus}</span>}
+        {buybackStatus && <span className="text-[7px] text-gold-dim">{buybackStatus}</span>}
       </div>
     </div>
   );
