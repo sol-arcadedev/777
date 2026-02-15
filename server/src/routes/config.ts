@@ -3,6 +3,7 @@ import prisma from "../lib/db.js";
 import { serializeConfig } from "../lib/serialize.js";
 import { getRewardWalletBalance } from "../services/solana.js";
 import { wsBroadcaster } from "../services/wsServer.js";
+import { adminAuth } from "../middleware/adminAuth.js";
 import type { UpdateConfigRequest } from "@shared/types";
 
 const router = Router();
@@ -34,7 +35,7 @@ router.get("/api/config", async (_req, res) => {
   }
 });
 
-router.put("/api/config", async (req, res) => {
+router.put("/api/config", adminAuth, async (req, res) => {
   try {
     const body: UpdateConfigRequest = req.body;
     const data: Record<string, unknown> = {};

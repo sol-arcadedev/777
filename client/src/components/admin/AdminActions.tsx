@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { triggerTransfer, triggerBuyback } from "../../lib/api";
+import { triggerTransfer, triggerBuyback, clearAdminToken } from "../../lib/api";
 
 export default function AdminActions() {
   const [transferStatus, setTransferStatus] = useState<string | null>(null);
@@ -11,6 +11,11 @@ export default function AdminActions() {
       const res = await triggerTransfer();
       setTransferStatus(res.message);
     } catch (err) {
+      if (err instanceof Error && err.message.startsWith("401")) {
+        clearAdminToken();
+        window.location.reload();
+        return;
+      }
       setTransferStatus(err instanceof Error ? err.message : "Failed");
     }
   };
@@ -21,6 +26,11 @@ export default function AdminActions() {
       const res = await triggerBuyback();
       setBuybackStatus(res.message);
     } catch (err) {
+      if (err instanceof Error && err.message.startsWith("401")) {
+        clearAdminToken();
+        window.location.reload();
+        return;
+      }
       setBuybackStatus(err instanceof Error ? err.message : "Failed");
     }
   };

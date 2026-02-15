@@ -6,10 +6,28 @@ import {
   getCreatorWalletBalance,
   buybackAndBurn,
 } from "../services/solana.js";
+import { adminAuth, createSession } from "../middleware/adminAuth.js";
 
 const router = Router();
 
-router.post("/api/admin/trigger-transfer", async (_req, res) => {
+router.post("/api/admin/login", (req, res) => {
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword) {
+    res.status(503).json({ error: "Admin not configured" });
+    return;
+  }
+
+  const { password } = req.body;
+  if (!password || password !== adminPassword) {
+    res.status(401).json({ error: "Invalid password" });
+    return;
+  }
+
+  const token = createSession();
+  res.json({ token });
+});
+
+router.post("/api/admin/trigger-transfer", adminAuth, async (_req, res) => {
   try {
     const balance = await getVerificationWalletBalance();
     if (balance <= 0) {
@@ -42,7 +60,7 @@ router.post("/api/admin/trigger-transfer", async (_req, res) => {
   }
 });
 
-router.post("/api/admin/trigger-buyback", async (_req, res) => {
+router.post("/api/admin/trigger-buyback", adminAuth, async (_req, res) => {
   try {
     const balance = await getCreatorWalletBalance();
     if (balance <= 0) {
