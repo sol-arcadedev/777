@@ -233,10 +233,17 @@ export async function claimCreatorFees(): Promise<{
       creatorWallet,
     );
 
-    const balanceAfter = await connection.getBalance(creatorWallet.publicKey);
-    const totalClaimed = (balanceAfter - balanceBefore) / LAMPORTS_PER_SOL;
+    // Fetch tx to get the fee paid, so we can calculate actual claimed amount
+    const txDetails = await connection.getTransaction(tx, {
+      commitment: "confirmed",
+      maxSupportedTransactionVersion: 0,
+    });
+    const txFee = txDetails?.meta?.fee ?? 0;
 
-    console.log(`claimCreatorFees: claimed ${totalClaimed} SOL (tx: ${tx})`);
+    const balanceAfter = await connection.getBalance(creatorWallet.publicKey);
+    const totalClaimed = (balanceAfter - balanceBefore + txFee) / LAMPORTS_PER_SOL;
+
+    console.log(`claimCreatorFees: claimed ${totalClaimed} SOL (tx fee: ${txFee / LAMPORTS_PER_SOL} SOL, tx: ${tx})`);
     return { tx, totalClaimed };
   } catch (err) {
     console.error("claimCreatorFees error:", err);
