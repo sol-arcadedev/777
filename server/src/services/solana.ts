@@ -112,6 +112,31 @@ export async function transferReward(
   return signature;
 }
 
+/** Transfer SOL refund from Verification Wallet back to holder. */
+export async function transferRefund(
+  toAddress: string,
+  solAmount: number,
+): Promise<string> {
+  const to = new PublicKey(toAddress);
+  const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
+
+  const tx = new Transaction().add(
+    SystemProgram.transfer({
+      fromPubkey: verificationWallet.publicKey,
+      toPubkey: to,
+      lamports,
+    }),
+  );
+
+  const signature = await sendAndConfirmTransaction(connection, tx, [verificationWallet], {
+    commitment: "confirmed",
+    maxRetries: 3,
+  });
+
+  console.log(`Refund transfer: ${solAmount} SOL → ${toAddress} (tx: ${signature})`);
+  return signature;
+}
+
 /** Transfer SOL from Verification Wallet to Creator Wallet. */
 export async function transferToCreator(solAmount: number): Promise<string> {
   const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);

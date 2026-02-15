@@ -1,6 +1,8 @@
 // ─── Enums ───────────────────────────────────────────────
 
-export type SpinResult = "PENDING" | "WIN" | "LOSE";
+export type SpinResult = "PENDING" | "WIN" | "REFUND" | "LOSE";
+
+export type ReelSymbol = "7" | "SOL" | "X";
 
 // ─── Database Models (mirror Prisma schema) ──────────────
 
@@ -148,11 +150,13 @@ export interface SubmitSpinResponse {
 export interface SpinResultEvent {
   spinId: number;
   holderAddress: string;
-  result: "WIN" | "LOSE";
+  result: "WIN" | "REFUND" | "LOSE";
   solTransferred: number;
   winChance: number;
   rewardSol: number | null;
+  refundSol: number | null;
   txSignature: string | null;
+  reelSymbols: [ReelSymbol, ReelSymbol, ReelSymbol];
 }
 
 export type WsServerMessage =

@@ -10,6 +10,7 @@ datasource db {
 enum SpinResult {
   PENDING
   WIN
+  REFUND
   LOSE
 }
 
@@ -32,9 +33,11 @@ model SpinTransaction {
   winChance      Float
   queuePosition  Int
   result         SpinResult
-  rewardLamports BigInt?
-  txSignature    String?
-  createdAt      DateTime       @default(now())
+  rewardLamports    BigInt?
+  txSignature       String?
+  refundLamports    BigInt?
+  refundTxSignature String?
+  createdAt         DateTime       @default(now())
 
   reward RewardTransfer?
 }

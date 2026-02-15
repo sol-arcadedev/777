@@ -26,6 +26,32 @@
   100% { transform: translateY(-100%); }
 }
 
+/* Multi-symbol vertical scroll — scrolls through a strip of symbols */
+@keyframes reel-scroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(calc(-100% + 96px)); }
+}
+
+/* Snap/bounce when reel stops */
+@keyframes reel-stop {
+  0% { transform: translateY(8px); }
+  40% { transform: translateY(-4px); }
+  70% { transform: translateY(2px); }
+  100% { transform: translateY(0); }
+}
+
+/* Purple/Solana-branded glow for REFUND result */
+@keyframes refund-glow-anim {
+  0%, 100% { box-shadow: 0 0 6px #9945FF; }
+  50% { box-shadow: 0 0 24px #9945FF, 0 0 48px rgba(153,69,255,0.3); }
+}
+
+/* Pulsing glow on individual refund symbol */
+@keyframes refund-symbol-pulse {
+  0%, 100% { text-shadow: 0 0 4px #9945FF; }
+  50% { text-shadow: 0 0 12px #9945FF, 0 0 24px #14F195; }
+}
+
 @keyframes slide-in-left {
   0% { transform: translateX(-100%); opacity: 0; }
   100% { transform: translateX(0); opacity: 1; }
@@ -90,6 +116,19 @@ body {
 
 .animate-spin-reel {
   animation: reel-spin-pixel 0.15s steps(3) infinite;
+}
+
+.animate-reel-scroll {
+  animation: reel-scroll 0.12s steps(3) infinite;
+}
+
+.animate-reel-stop {
+  animation: reel-stop 0.3s steps(6) forwards;
+}
+
+.refund-glow {
+  animation: refund-glow-anim 0.8s steps(4) infinite;
+  border-color: #9945FF;
 }
 
 .animate-glow {

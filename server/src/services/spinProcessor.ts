@@ -1,10 +1,14 @@
 import prisma from "../lib/db.js";
 import { getQueueEntries, getWinnerEntries } from "../lib/queries.js";
-import { determineResult } from "./spinLogic.js";
+import { determineOutcome, generateReelSymbols } from "./spinLogic.js";
+import type { SpinOutcome } from "./spinLogic.js";
+import type { ReelSymbol, SpinResultEvent } from "@shared/types";
 import {
   checkTokenBalance,
   getRewardWalletBalance,
+  getVerificationWalletBalance,
   transferReward,
+  transferRefund,
 } from "./solana.js";
 import { wsBroadcaster } from "./wsServer.js";
 
@@ -61,6 +65,10 @@ class QueueProcessor {
     }
   }
 
+  private broadcastResult(data: SpinResultEvent): void {
+    wsBroadcaster.broadcast({ type: "spin:result", data });
+  }
+
   private async processSpin(spinId: number): Promise<void> {
     const spin = await prisma.spinTransaction.findUnique({
       where: { id: spinId },
@@ -79,23 +87,23 @@ class QueueProcessor {
       config.requiredHoldings,
     );
     if (!hasTokens) {
+      const reelSymbols = generateReelSymbols("LOSE");
       await prisma.spinTransaction.update({
         where: { id: spinId },
         data: { result: "LOSE" },
       });
       console.log(`Spin #${spinId}: LOSE (insufficient tokens)`);
 
-      wsBroadcaster.broadcast({
-        type: "spin:result",
-        data: {
-          spinId,
-          holderAddress: spin.holderAddress,
-          result: "LOSE",
-          solTransferred: spin.solTransferred,
-          winChance: spin.winChance,
-          rewardSol: null,
-          txSignature: null,
-        },
+      this.broadcastResult({
+        spinId,
+        holderAddress: spin.holderAddress,
+        result: "LOSE",
+        solTransferred: spin.solTransferred,
+        winChance: spin.winChance,
+        rewardSol: null,
+        refundSol: null,
+        txSignature: null,
+        reelSymbols,
       });
       wsBroadcaster.broadcast({
         type: "queue:update",
@@ -104,10 +112,11 @@ class QueueProcessor {
       return;
     }
 
-    // Determine result
-    const isWin = determineResult(spin.winChance);
+    // Determine outcome
+    let outcome: SpinOutcome = determineOutcome(spin.winChance);
+    const reelSymbols = generateReelSymbols(outcome);
 
-    if (isWin) {
+    if (outcome === "WIN") {
       const balance = await getRewardWalletBalance();
       const rewardSol = balance * (config.rewardPercent / 100);
       const rewardLamports = BigInt(Math.floor(rewardSol * 1e9));
@@ -133,17 +142,16 @@ class QueueProcessor {
       );
 
       const newBalance = await getRewardWalletBalance();
-      wsBroadcaster.broadcast({
-        type: "spin:result",
-        data: {
-          spinId,
-          holderAddress: spin.holderAddress,
-          result: "WIN",
-          solTransferred: spin.solTransferred,
-          winChance: spin.winChance,
-          rewardSol,
-          txSignature,
-        },
+      this.broadcastResult({
+        spinId,
+        holderAddress: spin.holderAddress,
+        result: "WIN",
+        solTransferred: spin.solTransferred,
+        winChance: spin.winChance,
+        rewardSol,
+        refundSol: null,
+        txSignature,
+        reelSymbols,
       });
       wsBroadcaster.broadcast({
         type: "queue:update",
@@ -157,24 +165,88 @@ class QueueProcessor {
         type: "reward:balance",
         data: { balanceSol: newBalance },
       });
-    } else {
-      await prisma.spinTransaction.update({
-        where: { id: spinId },
-        data: { result: "LOSE" },
-      });
-      console.log(`Spin #${spinId}: LOSE`);
+    } else if (outcome === "REFUND") {
+      // Check verification wallet balance before refund
+      const verBalance = await getVerificationWalletBalance();
+      const refundSol = spin.solTransferred;
 
-      wsBroadcaster.broadcast({
-        type: "spin:result",
-        data: {
+      if (verBalance < refundSol + 0.002) {
+        // Insufficient balance for refund + rent, fall back to LOSE
+        console.log(
+          `Spin #${spinId}: REFUND downgraded to LOSE (insufficient verification balance: ${verBalance} SOL)`,
+        );
+        const loseSymbols = generateReelSymbols("LOSE");
+        await prisma.spinTransaction.update({
+          where: { id: spinId },
+          data: { result: "LOSE" },
+        });
+
+        this.broadcastResult({
           spinId,
           holderAddress: spin.holderAddress,
           result: "LOSE",
           solTransferred: spin.solTransferred,
           winChance: spin.winChance,
           rewardSol: null,
+          refundSol: null,
           txSignature: null,
+          reelSymbols: loseSymbols,
+        });
+        wsBroadcaster.broadcast({
+          type: "queue:update",
+          data: await getQueueEntries(),
+        });
+        return;
+      }
+
+      const refundLamports = BigInt(Math.floor(refundSol * 1e9));
+      const txSignature = await transferRefund(spin.holderAddress, refundSol);
+
+      await prisma.spinTransaction.update({
+        where: { id: spinId },
+        data: {
+          result: "REFUND",
+          refundLamports,
+          refundTxSignature: txSignature,
         },
+      });
+      console.log(
+        `Spin #${spinId}: REFUND — ${refundSol.toFixed(4)} SOL → ${spin.holderAddress}`,
+      );
+
+      this.broadcastResult({
+        spinId,
+        holderAddress: spin.holderAddress,
+        result: "REFUND",
+        solTransferred: spin.solTransferred,
+        winChance: spin.winChance,
+        rewardSol: null,
+        refundSol,
+        txSignature,
+        reelSymbols,
+      });
+      wsBroadcaster.broadcast({
+        type: "queue:update",
+        data: await getQueueEntries(),
+      });
+    } else {
+      // LOSE
+      await prisma.spinTransaction.update({
+        where: { id: spinId },
+        data: { result: "LOSE" },
+      });
+      console.log(`Spin #${spinId}: LOSE`);
+
+      this.broadcastResult({
+        spinId,
+        holderAddress: spin.holderAddress,
+        result: "LOSE",
+        solTransferred: spin.solTransferred,
+        winChance: spin.winChance,
+        rewardSol: null,
+        refundSol: null,
+        txSignature: null,
+        reelSymbols,
       });
       wsBroadcaster.broadcast({
         type: "queue:update",
