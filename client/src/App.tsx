@@ -4,6 +4,7 @@ import { useQueue } from "./hooks/useQueue";
 import { useWinners } from "./hooks/useWinners";
 import Layout from "./components/Layout";
 import AdminPanel from "./components/admin/AdminPanel";
+import NotificationToast from "./components/NotificationToast";
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash);
@@ -20,7 +21,7 @@ function useHashRoute() {
 function App() {
   const hash = useHashRoute();
   const { config, updateConfig } = useConfig();
-  const { activeSpin, waiting } = useQueue();
+  const { activeSpin, waiting, newEntries, clearNewEntries } = useQueue();
   const { winners } = useWinners();
 
   if (!config) {
@@ -36,12 +37,15 @@ function App() {
   }
 
   return (
-    <Layout
-      config={config}
-      activeSpin={activeSpin}
-      waiting={waiting}
-      winners={winners}
-    />
+    <>
+      <Layout
+        config={config}
+        activeSpin={activeSpin}
+        waiting={waiting}
+        winners={winners}
+      />
+      <NotificationToast newEntries={newEntries} onConsumed={clearNewEntries} />
+    </>
   );
 }
 

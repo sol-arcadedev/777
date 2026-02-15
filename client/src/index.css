@@ -1,4 +1,3 @@
-@import "@solana/wallet-adapter-react-ui/styles.css";
 @import "tailwindcss";
 
 @theme {
@@ -18,6 +17,11 @@
   100% { transform: translateY(-100%); }
 }
 
+@keyframes slide-in-left {
+  0% { transform: translateX(-100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
 @keyframes glow-pulse {
   0%, 100% { box-shadow: 0 0 8px var(--color-gold-dim); }
   50% { box-shadow: 0 0 24px var(--color-gold); }
@@ -35,4 +39,8 @@ body {
 
 .animate-glow {
   animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
 }

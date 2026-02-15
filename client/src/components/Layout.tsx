@@ -1,5 +1,4 @@
 import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry } from "@shared/types";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
 import SlotDisplay from "./SlotDisplay";
@@ -35,7 +34,6 @@ export default function Layout({ config, activeSpin, waiting, winners }: LayoutP
 
         {/* Center column: Slot Machine */}
         <div className="flex flex-col items-center justify-center gap-4">
-          <WalletMultiButton />
           <SlotMachine isSpinning={isSpinning} paused={config.paused} minSolTransfer={config.minSolTransfer} />
           <SlotDisplay activeSpin={activeSpin} />
           <div className="flex gap-4 w-full max-w-md">

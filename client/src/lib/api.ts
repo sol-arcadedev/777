@@ -4,8 +4,6 @@ import type {
   QueueEntry,
   WinnerHistoryEntry,
   UpdateConfigRequest,
-  SubmitSpinRequest,
-  SubmitSpinResponse,
 } from "@shared/types";
 
 async function fetchJSON<T>(url: string, init?: RequestInit): Promise<T> {
@@ -40,14 +38,6 @@ export function getWinners(limit = 20) {
 export function triggerTransfer() {
   return fetchJSON<{ message: string }>(`${API_BASE}/admin/trigger-transfer`, {
     method: "POST",
-  });
-}
-
-export function submitSpin(data: SubmitSpinRequest) {
-  return fetchJSON<SubmitSpinResponse>(`${API_BASE}/spin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data),
   });
 }
 

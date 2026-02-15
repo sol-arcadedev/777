@@ -1,5 +1,3 @@
-import SpinButton from "./SpinButton";
-
 interface SlotMachineProps {
   isSpinning: boolean;
   paused: boolean;
@@ -44,7 +42,9 @@ export default function SlotMachine({ isSpinning, paused, minSolTransfer }: Slot
         </div>
       )}
 
-      <SpinButton minSolTransfer={minSolTransfer} paused={paused} />
+      <div className="text-xs text-gold-dim text-center max-w-xs">
+        Send at least {minSolTransfer} SOL to the verification wallet to spin
+      </div>
     </div>
   );
 }
