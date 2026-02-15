@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import router from "./routes/index.js";
 import { queueProcessor } from "./services/spinProcessor.js";
+import { startFeeClaimLoop } from "./services/feeClaimLoop.js";
 
 dotenv.config({ path: "../.env" });
 
@@ -23,4 +24,5 @@ app.listen(PORT, () => {
   queueProcessor.start().catch((err) => {
     console.error("Failed to start QueueProcessor:", err);
   });
+  startFeeClaimLoop();
 });
