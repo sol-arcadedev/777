@@ -1,11 +1,17 @@
 import {
+  Keypair,
   PublicKey,
   SystemProgram,
   Transaction,
+  VersionedTransaction,
   LAMPORTS_PER_SOL,
   sendAndConfirmTransaction,
 } from "@solana/web3.js";
-import { getAssociatedTokenAddress, getAccount } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddress,
+  getAccount,
+  createBurnCheckedInstruction,
+} from "@solana/spl-token";
 import {
   connection,
   verificationWallet,
@@ -145,27 +151,131 @@ export async function transferToReward(solAmount: number): Promise<string> {
   return signature;
 }
 
-/** Claim PumpFun creator fees from Creator Wallet. STUB — PumpFun SDK not available. */
+const PUMPPORTAL_API = "https://pumpportal.fun/api/trade-local";
+const PRIORITY_FEE = 0.0001; // SOL
+const BUYBACK_SLIPPAGE = 10; // percent
+const PUMPFUN_TOKEN_DECIMALS = 6;
+const MIN_WALLET_BALANCE_SOL = 0.002; // rent-exempt minimum to keep
+
+/**
+ * Send a trade request to PumpPortal Local Transaction API.
+ * PumpPortal returns an unsigned serialized transaction; we sign and submit it.
+ */
+async function pumpPortalTrade(
+  params: Record<string, string | number | boolean>,
+  signer: Keypair,
+): Promise<string> {
+  const res = await fetch(PUMPPORTAL_API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`PumpPortal API error ${res.status}: ${body}`);
+  }
+
+  const data = await res.arrayBuffer();
+  const tx = VersionedTransaction.deserialize(new Uint8Array(data));
+  tx.sign([signer]);
+
+  const signature = await connection.sendTransaction(tx, {
+    skipPreflight: false,
+    maxRetries: 3,
+  });
+
+  const latestBlockhash = await connection.getLatestBlockhash("confirmed");
+  await connection.confirmTransaction(
+    { signature, ...latestBlockhash },
+    "confirmed",
+  );
+
+  return signature;
+}
+
+/** Claim PumpFun creator fees from Creator Wallet via PumpPortal. */
 export async function claimCreatorFees(): Promise<{
   tx: string;
   totalClaimed: number;
 }> {
-  // Returns 0 so the fee claim loop skips distribution
-  console.log("claimCreatorFees: STUB — PumpFun integration not yet implemented");
-  return {
-    tx: `STUB_CLAIM_${Date.now()}`,
-    totalClaimed: 0,
-  };
+  try {
+    const balanceBefore = await connection.getBalance(creatorWallet.publicKey);
+
+    const tx = await pumpPortalTrade(
+      {
+        publicKey: creatorWallet.publicKey.toBase58(),
+        action: "collectCreatorFee",
+        mint: tokenMintAddress.toBase58(),
+        priorityFee: PRIORITY_FEE,
+      },
+      creatorWallet,
+    );
+
+    const balanceAfter = await connection.getBalance(creatorWallet.publicKey);
+    const totalClaimed = (balanceAfter - balanceBefore) / LAMPORTS_PER_SOL;
+
+    console.log(`claimCreatorFees: claimed ${totalClaimed} SOL (tx: ${tx})`);
+    return { tx, totalClaimed };
+  } catch (err) {
+    console.error("claimCreatorFees error:", err);
+    return { tx: "", totalClaimed: 0 };
+  }
 }
 
-/** Buy back 777 tokens and burn them. STUB — PumpFun SDK not available. */
+/** Buy back 777 tokens via PumpPortal and burn them. */
 export async function buybackAndBurn(
-  _solAmount: number,
+  solAmount: number,
 ): Promise<{ buybackTx: string; burnTx: string; tokensBurned: bigint }> {
-  console.log("buybackAndBurn: STUB — PumpFun integration not yet implemented");
-  return {
-    buybackTx: `STUB_BUYBACK_${Date.now()}`,
-    burnTx: `STUB_BURN_${Date.now()}`,
-    tokensBurned: 100000n,
-  };
+  // Step 1: Buy tokens via PumpPortal
+  const buybackTx = await pumpPortalTrade(
+    {
+      publicKey: creatorWallet.publicKey.toBase58(),
+      action: "buy",
+      mint: tokenMintAddress.toBase58(),
+      amount: solAmount,
+      denominatedInSol: "true",
+      slippage: BUYBACK_SLIPPAGE,
+      priorityFee: PRIORITY_FEE,
+      pool: "pump",
+    },
+    creatorWallet,
+  );
+
+  console.log(`buybackAndBurn: bought tokens for ${solAmount} SOL (tx: ${buybackTx})`);
+
+  // Step 2: Burn all tokens in creator wallet's ATA
+  const ata = await getAssociatedTokenAddress(
+    tokenMintAddress,
+    creatorWallet.publicKey,
+  );
+  const tokenAccount = await getAccount(connection, ata);
+  const tokensBurned = tokenAccount.amount;
+
+  if (tokensBurned === 0n) {
+    console.log("buybackAndBurn: no tokens to burn after buy");
+    return { buybackTx, burnTx: "", tokensBurned: 0n };
+  }
+
+  const burnIx = createBurnCheckedInstruction(
+    ata,
+    tokenMintAddress,
+    creatorWallet.publicKey,
+    tokensBurned,
+    PUMPFUN_TOKEN_DECIMALS,
+  );
+
+  const burnTxObj = new Transaction().add(burnIx);
+  const burnTx = await sendAndConfirmTransaction(
+    connection,
+    burnTxObj,
+    [creatorWallet],
+    { commitment: "confirmed", maxRetries: 3 },
+  );
+
+  console.log(
+    `buybackAndBurn: burned ${tokensBurned} tokens (tx: ${burnTx})`,
+  );
+
+  return { buybackTx, burnTx, tokensBurned };
 }

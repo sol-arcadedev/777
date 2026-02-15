@@ -2,6 +2,7 @@ import prisma from "../lib/db.js";
 import {
   getVerificationWalletBalance,
   transferToCreator,
+  buybackAndBurn,
 } from "./solana.js";
 
 const CHECK_INTERVAL_MS = 5_000;
@@ -25,16 +26,39 @@ async function checkTimer(): Promise<void> {
       const transferAmount = balance * 0.9;
       const tx = await transferToCreator(transferAmount);
 
-      await prisma.buybackBurn.create({
-        data: {
-          transferTxSignature: tx,
-          solAmount: transferAmount,
-        },
-      });
-
       console.log(
         `Buyback timer: transferred ${transferAmount} SOL to Creator (tx: ${tx})`,
       );
+
+      // Buyback+burn using 50% of the transferred amount (per spec)
+      const buybackAmount = transferAmount * 0.5;
+      try {
+        const { buybackTx, burnTx, tokensBurned } =
+          await buybackAndBurn(buybackAmount);
+
+        await prisma.buybackBurn.create({
+          data: {
+            transferTxSignature: tx,
+            buybackTxSignature: buybackTx,
+            burnTxSignature: burnTx,
+            solAmount: transferAmount,
+            tokensBurned: tokensBurned,
+          },
+        });
+
+        console.log(
+          `Buyback timer: bought back & burned ${tokensBurned} tokens for ${buybackAmount} SOL`,
+        );
+      } catch (bbErr) {
+        // Still record the transfer even if buyback fails
+        await prisma.buybackBurn.create({
+          data: {
+            transferTxSignature: tx,
+            solAmount: transferAmount,
+          },
+        });
+        console.error("Buyback timer: buyback+burn failed:", bbErr);
+      }
     } else {
       console.log("Buyback timer: verification wallet empty, skipping transfer");
     }
