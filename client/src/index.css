@@ -1,1 +1,37 @@
 @import "tailwindcss";
+
+@theme {
+  --color-casino-black: #0a0a0a;
+  --color-casino-dark: #141414;
+  --color-casino-card: #1a1a1a;
+  --color-casino-border: #2a2a2a;
+  --color-gold: #fbbf24;
+  --color-gold-dim: #b8860b;
+  --color-gold-bright: #fde68a;
+  --color-win-green: #22c55e;
+  --color-lose-red: #ef4444;
+}
+
+@keyframes spin-reel {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 8px var(--color-gold-dim); }
+  50% { box-shadow: 0 0 24px var(--color-gold); }
+}
+
+body {
+  background-color: var(--color-casino-black);
+  color: white;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.animate-spin-reel {
+  animation: spin-reel 0.15s linear infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 2s ease-in-out infinite;
+}

@@ -1,0 +1,56 @@
+import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry } from "@shared/types";
+import Header from "./Header";
+import SlotMachine from "./SlotMachine";
+import SlotDisplay from "./SlotDisplay";
+import RewardDisplay from "./RewardDisplay";
+import CountdownTimer from "./CountdownTimer";
+import QueueDisplay from "./QueueDisplay";
+import WinnerHistory from "./WinnerHistory";
+import Rules from "./Rules";
+
+interface LayoutProps {
+  config: ConfigurationDTO;
+  activeSpin: QueueEntry | null;
+  waiting: QueueEntry[];
+  winners: WinnerHistoryEntry[];
+}
+
+export default function Layout({ config, activeSpin, waiting, winners }: LayoutProps) {
+  const isSpinning = activeSpin !== null;
+
+  return (
+    <div className="min-h-screen flex flex-col bg-casino-black">
+      <Header tokenCA={config.tokenCA} />
+
+      <main className="flex-1 grid grid-cols-[280px_1fr_300px] gap-4 p-4 max-w-[1920px] mx-auto w-full">
+        {/* Left column: Queue + Rules */}
+        <div className="flex flex-col gap-4">
+          <QueueDisplay waiting={waiting} />
+          <Rules
+            requiredHoldings={config.requiredHoldings}
+            minSolTransfer={config.minSolTransfer}
+          />
+        </div>
+
+        {/* Center column: Slot Machine */}
+        <div className="flex flex-col items-center justify-center gap-4">
+          <SlotMachine isSpinning={isSpinning} paused={config.paused} />
+          <SlotDisplay activeSpin={activeSpin} />
+          <div className="flex gap-4 w-full max-w-md">
+            <div className="flex-1">
+              <RewardDisplay rewardPercent={config.rewardPercent} />
+            </div>
+            <div className="flex-1">
+              <CountdownTimer durationSec={config.timerDurationSec} />
+            </div>
+          </div>
+        </div>
+
+        {/* Right column: Winner History */}
+        <div>
+          <WinnerHistory winners={winners} />
+        </div>
+      </main>
+    </div>
+  );
+}
