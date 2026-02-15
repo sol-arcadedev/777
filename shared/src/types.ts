@@ -1,6 +1,6 @@
 // ─── Enums ───────────────────────────────────────────────
 
-export type SpinResult = "WIN" | "LOSE";
+export type SpinResult = "PENDING" | "WIN" | "LOSE";
 
 // ─── Database Models (mirror Prisma schema) ──────────────
 
@@ -126,6 +126,19 @@ export interface QueueEntry {
   solTransferred: number;
   winChance: number;
   queuePosition: number;
+}
+
+// ─── Spin Submission ────────────────────────────────────
+
+export interface SubmitSpinRequest {
+  holderAddress: string;
+  solTransferred: number;
+}
+
+export interface SubmitSpinResponse {
+  spinId: number;
+  queuePosition: number;
+  winChance: number;
 }
 
 // ─── Admin Config Update Request ─────────────────────────
