@@ -7,4 +7,62 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Models will be added as features are built
+enum SpinResult {
+  WIN
+  LOSE
+}
+
+model Configuration {
+  id               Int      @id @default(1)
+  tokenCA          String   @default("To be added")
+  requiredHoldings BigInt   @default(500000)
+  minSolTransfer   Float    @default(0.01)
+  rewardPercent    Float    @default(30.0)
+  timerDurationSec Int      @default(300)
+  paused           Boolean  @default(false)
+  updatedAt        DateTime @updatedAt
+}
+
+model SpinTransaction {
+  id             Int            @id @default(autoincrement())
+  holderAddress  String
+  solTransferred Float
+  winChance      Float
+  queuePosition  Int
+  result         SpinResult
+  rewardLamports BigInt?
+  txSignature    String?
+  createdAt      DateTime       @default(now())
+
+  reward RewardTransfer?
+}
+
+model RewardTransfer {
+  id            Int      @id @default(autoincrement())
+  winnerAddress String
+  txSignature   String   @unique
+  solWon        Float
+  spinId        Int      @unique
+  createdAt     DateTime @default(now())
+
+  spin SpinTransaction @relation(fields: [spinId], references: [id])
+}
+
+model FeeClaim {
+  id                Int      @id @default(autoincrement())
+  claimTxSignature  String   @unique
+  totalClaimed      Float
+  treasuryAmount    Float
+  rewardAmount      Float
+  createdAt         DateTime @default(now())
+}
+
+model BuybackBurn {
+  id                    Int      @id @default(autoincrement())
+  transferTxSignature   String
+  buybackTxSignature    String?
+  burnTxSignature       String?
+  solAmount             Float
+  tokensBurned          BigInt?
+  createdAt             DateTime @default(now())
+}
