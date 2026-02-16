@@ -14,7 +14,7 @@ A Solana-powered slot machine platform where token holders spin to win SOL rewar
 
 ### Win Mechanics
 
-- Base win chance starts at 3%, increasing +1% per extra 0.01 SOL sent (capped at 5%)
+- Fixed win chance percentage (configurable via admin panel)
 - Winners receive a configurable percentage (default: 30%) of the Reward Wallet balance
 - Rewards are auto-transferred to the winner's wallet on-chain
 
