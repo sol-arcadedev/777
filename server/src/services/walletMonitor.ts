@@ -114,6 +114,15 @@ class WalletMonitor {
 
       const winChance = config.winChance;
 
+      // DB-level duplicate check — prevent same tx signature from creating multiple spins
+      const existing = await prisma.spinTransaction.findFirst({
+        where: { incomingTxSignature: signature },
+      });
+      if (existing) {
+        console.log(`WalletMonitor: tx ${signature.slice(0, 16)}... already queued (spin #${existing.id}), skipping`);
+        return;
+      }
+
       const maxPos = await prisma.spinTransaction.aggregate({
         _max: { queuePosition: true },
       });

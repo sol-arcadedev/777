@@ -56,9 +56,6 @@ export default function RewardDisplay({ rewardPercent, balanceSol }: RewardDispl
               </svg>
             )}
           </div>
-          <div className="text-[8px] text-gold-dim/60">
-            {rewardPercent}% OF {balanceSol!.toFixed(4)}
-          </div>
         </>
       ) : (
         <>

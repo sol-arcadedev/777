@@ -67,6 +67,15 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
 
       <Header tokenCA={config.tokenCA} expiresAt={config.timerExpiresAt} burnUpdate={burnUpdate} />
 
+      <div className="flex justify-center relative z-[1] -mb-2">
+        <img
+          src="/777_TokenImage.png"
+          alt="777 Token"
+          className="h-12 w-12 object-contain"
+          style={{ imageRendering: "pixelated" }}
+        />
+      </div>
+
       <main className="flex-1 grid grid-cols-[310px_1fr_310px] gap-4 p-4 max-w-[1920px] mx-auto w-full relative z-[1] min-h-0">
         {/* Left column: Rules + Queue */}
         <div className="flex flex-col gap-3 justify-start pt-4 min-h-0">
@@ -121,6 +130,12 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
           <SpinHistory spins={spinHistory} />
         </div>
       </main>
+
+      <div className="text-center py-1 relative z-[1]">
+        <span className="text-[7px] text-gold-dim/30 tracking-wider uppercase">
+          Not financial advice. Play responsibly. You may lose your SOL.
+        </span>
+      </div>
 
       <button
         onClick={toggleMute}
