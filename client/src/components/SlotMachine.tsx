@@ -260,6 +260,7 @@ export default function SlotMachine({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const staggerTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const spinStartRef = useRef<number>(0);
+  const handledResultRef = useRef<SpinResultEvent | null>(null);
 
   const strips = useMemo(
     () => [generateStrip(), generateStrip(), generateStrip()],
@@ -275,7 +276,21 @@ export default function SlotMachine({
   }, []);
 
   useEffect(() => {
-    if (spinResult) {
+    // Clear all pending animation timers
+    const clearAllTimers = () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      staggerTimers.current.forEach(clearTimeout);
+      staggerTimers.current = [];
+    };
+
+    // Only handle each spinResult once — prevents re-entry when isSpinning changes
+    if (spinResult && spinResult !== handledResultRef.current) {
+      handledResultRef.current = spinResult;
+      clearAllTimers();
+
       const elapsed = Date.now() - spinStartRef.current;
       const remaining = Math.max(0, MIN_SPIN_MS - elapsed);
 
@@ -310,6 +325,7 @@ export default function SlotMachine({
           setPhase("idle");
           setDisplayResult(null);
           setReelStates(["stopped", "stopped", "stopped"]);
+          handledResultRef.current = null;
           onResultDone();
         }, STAGGER_DELAY_MS * 2 + RESULT_DISPLAY_MS);
       };
@@ -320,7 +336,8 @@ export default function SlotMachine({
       } else {
         stopReels();
       }
-    } else if (isSpinning && phase !== "result" && phase !== "stopping") {
+    } else if (!spinResult && isSpinning && phase !== "result" && phase !== "stopping") {
+      clearAllTimers();
       setPhase("spinning");
       setReelStates(["spinning", "spinning", "spinning"]);
       spinStartRef.current = Date.now();
@@ -328,16 +345,11 @@ export default function SlotMachine({
       spinSfx.play().catch(() => {});
       setLeverPull(true);
       setTimeout(() => setLeverPull(false), 600);
-    } else if (!isSpinning && phase !== "result" && phase !== "stopping") {
+    } else if (!spinResult && !isSpinning && phase !== "result" && phase !== "stopping") {
       setPhase("idle");
     }
-
-    return () => {
-      if (timerRef.current) {
-        clearTimeout(timerRef.current);
-        timerRef.current = null;
-      }
-    };
+    // No cleanup — timers are managed explicitly above.
+    // Mount cleanup (line 270-275) handles unmount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [spinResult, isSpinning]);
 

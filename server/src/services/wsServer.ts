@@ -13,9 +13,14 @@ class WsBroadcaster {
 
     this.wss.on("connection", (ws: WebSocket) => {
       (ws as any).isAlive = true;
+      console.log(`WS: client connected (total: ${this.wss?.clients.size})`);
 
       ws.on("pong", () => {
         (ws as any).isAlive = true;
+      });
+
+      ws.on("close", () => {
+        console.log(`WS: client disconnected (total: ${this.wss?.clients.size})`);
       });
 
       ws.on("error", (err: Error) => {
@@ -48,12 +53,16 @@ class WsBroadcaster {
     if (!this.wss) return;
 
     const payload = JSON.stringify(message);
+    let sent = 0;
 
     this.wss.clients.forEach((client: WebSocket) => {
       if (client.readyState === WebSocket.OPEN) {
         client.send(payload);
+        sent++;
       }
     });
+
+    console.log(`WS: broadcast ${message.type} to ${sent} client(s)`);
   }
 }
 

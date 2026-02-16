@@ -2,7 +2,7 @@ export const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : "/api";
 
-export const POLL_FALLBACK_MS = 30_000;
+export const POLL_FALLBACK_MS = 5_000;
 export const POLL_CONFIG_MS = POLL_FALLBACK_MS;
 export const POLL_QUEUE_MS = POLL_FALLBACK_MS;
 export const POLL_WINNERS_MS = POLL_FALLBACK_MS;

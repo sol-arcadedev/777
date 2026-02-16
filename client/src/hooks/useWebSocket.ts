@@ -27,24 +27,28 @@ export function useWebSocket(onMessage: (msg: WsServerMessage) => void) {
     wsRef.current = ws;
 
     ws.onopen = () => {
+      console.log("[WS] connected to", url);
       delayRef.current = INITIAL_DELAY_MS;
     };
 
     ws.onmessage = (event) => {
       try {
         const msg = JSON.parse(event.data) as WsServerMessage;
+        console.log("[WS] received:", msg.type);
         onMessageRef.current(msg);
       } catch {
         // ignore malformed messages
       }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (e) => {
+      console.log("[WS] closed:", e.code, e.reason);
       wsRef.current = null;
       scheduleReconnect();
     };
 
     ws.onerror = () => {
+      console.error("[WS] connection error");
       ws.close();
     };
   }, []);
