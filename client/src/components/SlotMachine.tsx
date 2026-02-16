@@ -23,6 +23,8 @@ const winSfx = new Audio("/sfx/777_sfx.mp3");
 const refundSfx = new Audio("/sfx/SOLRefund_sfx.mp3");
 winSfx.preload = "auto";
 refundSfx.preload = "auto";
+winSfx.volume = 0.03;
+refundSfx.volume = 0.03;
 
 function randomSymbol(): ReelSymbol {
   return ALL_SYMBOLS[Math.floor(Math.random() * ALL_SYMBOLS.length)];

@@ -93,7 +93,7 @@ export default function Header({ tokenCA, expiresAt, burnUpdate }: HeaderProps) 
           </a>
         )}
         <a
-          href="https://x.com"
+          href="https://x.com/i/communities/2023394836364071048"
           target="_blank"
           rel="noopener noreferrer"
           className="border-2 border-gold-dim px-5 py-2 text-[10px] text-cream hover:border-gold transition-colors uppercase"
