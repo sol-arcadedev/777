@@ -12,6 +12,7 @@ export async function getQueueEntries(): Promise<QueueEntry[]> {
     holderAddress: s.holderAddress,
     solTransferred: s.solTransferred,
     queuePosition: s.queuePosition,
+    incomingTxSignature: s.incomingTxSignature,
   }));
 }
 

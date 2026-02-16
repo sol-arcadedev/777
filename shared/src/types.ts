@@ -141,6 +141,7 @@ export interface QueueEntry {
   holderAddress: string;
   solTransferred: number;
   queuePosition: number;
+  incomingTxSignature: string | null;
 }
 
 // ─── Spin Submission ────────────────────────────────────

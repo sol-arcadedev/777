@@ -38,8 +38,9 @@ model SpinTransaction {
   solTransferred Float
   winChance      Float
   queuePosition  Int
-  result         SpinResult
-  rewardLamports    BigInt?
+  result              SpinResult
+  incomingTxSignature String?
+  rewardLamports      BigInt?
   txSignature       String?
   refundLamports    BigInt?
   refundTxSignature String?

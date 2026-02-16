@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { formatAddress, copyToClipboard } from "../lib/utils";
+import { SOLSCAN_TX_URL } from "../lib/constants";
 import type { QueueEntry } from "@shared/types";
 
 interface QueueDisplayProps {
@@ -13,17 +14,26 @@ function CopyButton({ text }: { text: string }) {
     const ok = await copyToClipboard(text);
     if (ok) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setTimeout(() => setCopied(false), 1200);
     }
   };
 
   return (
     <button
       onClick={handleCopy}
-      className="text-[6px] text-gold-dim/60 hover:text-gold cursor-pointer ml-1 shrink-0"
+      className="text-gold-dim/60 hover:text-gold transition-colors cursor-pointer ml-1 shrink-0"
       title="Copy address"
     >
-      {copied ? "OK" : "COPY"}
+      {copied ? (
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      ) : (
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+      )}
     </button>
   );
 }
@@ -100,16 +110,25 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
                 <span className="text-gold font-bold w-8 shrink-0">
                   {isNext && !isSearchHit ? "NEXT" : `#${position}`}
                 </span>
-                <a
-                  href={`https://solscan.io/account/${entry.holderAddress}?cluster=devnet`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-cream hover:text-gold transition-colors ml-1"
-                  title="View on Solscan"
-                >
+                <span className="text-cream ml-1">
                   {formatAddress(entry.holderAddress)}
-                </a>
+                </span>
                 <CopyButton text={entry.holderAddress} />
+                {entry.incomingTxSignature && (
+                  <a
+                    href={`${SOLSCAN_TX_URL}${entry.incomingTxSignature}?cluster=devnet`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gold-dim/60 hover:text-gold transition-colors ml-auto shrink-0"
+                    title="View transfer on Solscan"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                      <polyline points="15 3 21 3 21 9" />
+                      <line x1="10" y1="14" x2="21" y2="3" />
+                    </svg>
+                  </a>
+                )}
               </div>
             );
           })}

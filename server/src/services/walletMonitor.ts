@@ -126,6 +126,7 @@ class WalletMonitor {
           winChance,
           queuePosition,
           result: "PENDING",
+          incomingTxSignature: signature,
         },
       });
 

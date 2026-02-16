@@ -139,6 +139,7 @@ router.post("/api/dev/simulate-transfer", async (req, res) => {
         winChance,
         queuePosition,
         result: "PENDING",
+        incomingTxSignature: `dev-sim-${Date.now()}`,
       },
     });
 
