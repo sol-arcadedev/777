@@ -54,10 +54,10 @@ export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
       key={`${activeSpin.holderAddress}-${activeSpin.solTransferred}`}
       className="w-full max-w-[420px] flex items-center justify-center gap-6 text-[9px] px-4 py-2 animate-slide-up"
       style={{
-        background: "#0d5e2e",
-        border: "2px solid #00ff41",
-        boxShadow: "2px 2px 0 rgba(0,0,0,0.4), 0 0 8px rgba(0,255,65,0.2)",
-        animation: "slide-up-enter 0.4s steps(8) forwards, neon-spin-pulse 1.5s steps(4) infinite 0.4s",
+        background: "rgba(10,10,10,0.9)",
+        border: "2px solid #daa520",
+        boxShadow: "2px 2px 0 rgba(0,0,0,0.4), 0 0 8px rgba(218,165,32,0.15)",
+        animation: "slide-up-enter 0.4s steps(8) forwards",
       }}
     >
       {/* Pulsing dot */}
@@ -67,12 +67,12 @@ export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
           style={{
             width: "6px",
             height: "6px",
-            backgroundColor: "#00ff41",
+            backgroundColor: "#daa520",
             borderRadius: "50%",
-            boxShadow: "0 0 4px #00ff41",
+            boxShadow: "0 0 4px rgba(218,165,32,0.4)",
           }}
         />
-        <span className="text-win-green font-bold text-[9px]">NOW SPINNING</span>
+        <span className="text-gold font-bold text-[9px]">NOW SPINNING</span>
       </div>
       <div>
         <span className="text-gold text-[9px]">{formatAddress(activeSpin.holderAddress)}</span>
