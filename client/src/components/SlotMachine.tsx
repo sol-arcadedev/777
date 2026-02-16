@@ -565,9 +565,9 @@ export default function SlotMachine({
             style={{
               background: "rgba(0,0,0,0.5)",
               border: "2px solid #8b7340",
-              padding: "8px 14px",
+              padding: "10px 18px",
               boxShadow: "inset 0 1px 4px rgba(0,0,0,0.6)",
-              maxWidth: "300px",
+              maxWidth: "320px",
             }}
           >
             <div className="text-[7px] text-gold-dim/60 text-center tracking-widest mb-1">PAY TABLE</div>

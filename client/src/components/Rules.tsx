@@ -32,7 +32,7 @@ export default function Rules({ requiredHoldings, minSolTransfer, verificationWa
       <ol className="text-[10px] text-cream/70 space-y-2.5 list-none">
         <li>
           <span className="text-gold-dim mr-1">[1]</span>
-          HOLD <span className="text-gold font-bold">{Number(requiredHoldings).toLocaleString()}</span> 777 TOKENS
+          HOLD AT LEAST <span className="text-gold font-bold">{Number(requiredHoldings).toLocaleString()}</span> 777 TOKENS
         </li>
         <li>
           <span className="text-gold-dim mr-1">[2]</span>
