@@ -5,6 +5,7 @@ import { getRewardWalletBalance } from "../services/solana.js";
 import { wsBroadcaster } from "../services/wsServer.js";
 import { adminAuth } from "../middleware/adminAuth.js";
 import { setTokenMintAddress } from "../config/wallets.js";
+import { restartFeeClaimLoop, isFeeClaimRunning } from "../services/feeClaimLoop.js";
 import type { UpdateConfigRequest } from "@shared/types";
 
 const router = Router();
@@ -58,6 +59,13 @@ router.put("/api/config", adminAuth, async (req, res) => {
       );
     }
     if (body.paused !== undefined) data.paused = body.paused;
+    if (body.feeClaimIntervalSec !== undefined) {
+      data.feeClaimIntervalSec = body.feeClaimIntervalSec;
+      // Restart fee claim loop with new interval if it's running
+      if (isFeeClaimRunning()) {
+        restartFeeClaimLoop(body.feeClaimIntervalSec * 1000);
+      }
+    }
 
     const config = await prisma.configuration.update({
       where: { id: 1 },

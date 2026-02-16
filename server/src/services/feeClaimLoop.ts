@@ -7,9 +7,8 @@ import {
 } from "./solana.js";
 import { wsBroadcaster } from "./wsServer.js";
 
-const FEE_CLAIM_INTERVAL_MS = 30_000;
-
 let intervalId: ReturnType<typeof setInterval> | null = null;
+let currentIntervalMs = 30_000;
 
 async function claimFees(): Promise<void> {
   try {
@@ -49,16 +48,18 @@ async function claimFees(): Promise<void> {
   }
 }
 
-export function startFeeClaimLoop(): void {
+export function startFeeClaimLoop(intervalMs?: number): void {
   if (intervalId) {
     console.warn("Fee claim loop already running");
     return;
   }
 
+  currentIntervalMs = intervalMs ?? currentIntervalMs;
+
   console.log(
-    `Starting fee claim loop (every ${FEE_CLAIM_INTERVAL_MS / 1000}s)`,
+    `Starting fee claim loop (every ${currentIntervalMs / 1000}s)`,
   );
-  intervalId = setInterval(claimFees, FEE_CLAIM_INTERVAL_MS);
+  intervalId = setInterval(claimFees, currentIntervalMs);
 }
 
 export function stopFeeClaimLoop(): void {
@@ -67,4 +68,13 @@ export function stopFeeClaimLoop(): void {
     intervalId = null;
     console.log("Fee claim loop stopped");
   }
+}
+
+export function restartFeeClaimLoop(intervalMs: number): void {
+  stopFeeClaimLoop();
+  startFeeClaimLoop(intervalMs);
+}
+
+export function isFeeClaimRunning(): boolean {
+  return intervalId !== null;
 }

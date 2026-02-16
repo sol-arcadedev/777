@@ -22,8 +22,13 @@ model Configuration {
   rewardPercent    Float    @default(30.0)
   timerDurationSec Int      @default(300)
   timerExpiresAt   DateTime?
-  paused           Boolean  @default(false)
-  updatedAt        DateTime @updatedAt
+  paused              Boolean  @default(false)
+  feeClaimEnabled     Boolean  @default(false)
+  feeClaimIntervalSec Int      @default(30)
+  buybackEnabled      Boolean  @default(false)
+  queueEnabled        Boolean  @default(false)
+  slotActive          Boolean  @default(false)
+  updatedAt           DateTime @updatedAt
 }
 
 model SpinTransaction {

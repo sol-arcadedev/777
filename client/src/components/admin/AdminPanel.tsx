@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import type { ConfigurationDTO, UpdateConfigRequest } from "@shared/types";
 import { adminLogin, getAdminToken, setAdminToken, clearAdminToken, updateConfig as apiUpdateConfig } from "../../lib/api";
 import ConfigForm from "./ConfigForm";
+import SystemControls from "./SystemControls";
 import AdminActions from "./AdminActions";
 
 interface AdminPanelProps {
@@ -120,6 +121,17 @@ export default function AdminPanel({ config, onSave }: AdminPanelProps) {
         >
           <h2 className="text-[9px] uppercase tracking-wider text-gold mb-3">CONFIGURATION</h2>
           <ConfigForm config={config} onSave={handleSave} />
+        </div>
+
+        <div
+          className="p-4"
+          style={{
+            background: "#0a0a0a",
+            border: "3px solid #daa520",
+            boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+          }}
+        >
+          <SystemControls config={config} />
         </div>
 
         <div

@@ -19,6 +19,11 @@ export function serializeConfig(config: Configuration): ConfigurationDTO {
     timerDurationSec: config.timerDurationSec,
     timerExpiresAt: config.timerExpiresAt?.toISOString() ?? null,
     paused: config.paused,
+    feeClaimEnabled: config.feeClaimEnabled,
+    feeClaimIntervalSec: config.feeClaimIntervalSec,
+    buybackEnabled: config.buybackEnabled,
+    queueEnabled: config.queueEnabled,
+    slotActive: config.slotActive,
     updatedAt: config.updatedAt.toISOString(),
   };
 }

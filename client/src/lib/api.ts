@@ -4,6 +4,8 @@ import type {
   QueueEntry,
   WinnerHistoryEntry,
   UpdateConfigRequest,
+  SystemStatus,
+  BurnStatsDTO,
 } from "@shared/types";
 
 const ADMIN_TOKEN_KEY = "admin_token";
@@ -79,4 +81,42 @@ export function adminLogin(password: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ password }),
   });
+}
+
+export function toggleFeeClaim() {
+  return fetchJSON<{ feeClaimEnabled: boolean }>(`${API_BASE}/admin/toggle-fee-claim`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+}
+
+export function toggleBuyback() {
+  return fetchJSON<{ buybackEnabled: boolean }>(`${API_BASE}/admin/toggle-buyback`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+}
+
+export function toggleQueue() {
+  return fetchJSON<{ queueEnabled: boolean }>(`${API_BASE}/admin/toggle-queue`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+}
+
+export function toggleSlot() {
+  return fetchJSON<{ slotActive: boolean }>(`${API_BASE}/admin/toggle-slot`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
+}
+
+export function getSystemStatus() {
+  return fetchJSON<SystemStatus>(`${API_BASE}/admin/system-status`, {
+    headers: authHeaders(),
+  });
+}
+
+export function getBurnStats() {
+  return fetchJSON<BurnStatsDTO>(`${API_BASE}/burn-stats`);
 }

@@ -14,6 +14,7 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
   const [minSolTransfer, setMinSolTransfer] = useState(String(config.minSolTransfer));
   const [rewardPercent, setRewardPercent] = useState(String(config.rewardPercent));
   const [timerDurationSec, setTimerDurationSec] = useState(String(config.timerDurationSec));
+  const [feeClaimIntervalSec, setFeeClaimIntervalSec] = useState(String(config.feeClaimIntervalSec));
   const [paused, setPaused] = useState(config.paused);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -29,6 +30,7 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
         minSolTransfer: parseFloat(minSolTransfer),
         rewardPercent: parseFloat(rewardPercent),
         timerDurationSec: parseInt(timerDurationSec, 10),
+        feeClaimIntervalSec: parseInt(feeClaimIntervalSec, 10),
         paused,
       });
       setStatus("Saved");
@@ -84,14 +86,25 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
         </div>
       </div>
 
-      <div>
-        <label className="block text-[7px] text-gold-dim mb-1 uppercase">TIMER (SEC)</label>
-        <input
-          type="number"
-          value={timerDurationSec}
-          onChange={(e) => setTimerDurationSec(e.target.value)}
-          className={inputClass}
-        />
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-[7px] text-gold-dim mb-1 uppercase">TIMER (SEC)</label>
+          <input
+            type="number"
+            value={timerDurationSec}
+            onChange={(e) => setTimerDurationSec(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className="block text-[7px] text-gold-dim mb-1 uppercase">FEE CLAIM INTERVAL (SEC)</label>
+          <input
+            type="number"
+            value={feeClaimIntervalSec}
+            onChange={(e) => setFeeClaimIntervalSec(e.target.value)}
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

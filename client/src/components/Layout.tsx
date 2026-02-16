@@ -1,9 +1,10 @@
-import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent } from "@shared/types";
+import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO } from "@shared/types";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
 import SlotDisplay from "./SlotDisplay";
 import RewardDisplay from "./RewardDisplay";
 import CountdownTimer from "./CountdownTimer";
+import BurnDisplay from "./BurnDisplay";
 import QueueDisplay from "./QueueDisplay";
 import WinnerHistory from "./WinnerHistory";
 import Rules from "./Rules";
@@ -16,9 +17,10 @@ interface LayoutProps {
   rewardBalance: number | null;
   spinResult: SpinResultEvent | null;
   onSpinResultDone: () => void;
+  burnUpdate: BurnStatsDTO | null;
 }
 
-export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone }: LayoutProps) {
+export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate }: LayoutProps) {
   const isSpinning = activeSpin !== null;
 
   return (
@@ -55,6 +57,9 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
             </div>
             <div className="flex-1">
               <CountdownTimer expiresAt={config.timerExpiresAt} />
+            </div>
+            <div className="flex-1">
+              <BurnDisplay burnUpdate={burnUpdate} />
             </div>
           </div>
         </div>

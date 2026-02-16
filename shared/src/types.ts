@@ -15,6 +15,11 @@ export interface Configuration {
   timerDurationSec: number;
   timerExpiresAt: Date | null;
   paused: boolean;
+  feeClaimEnabled: boolean;
+  feeClaimIntervalSec: number;
+  buybackEnabled: boolean;
+  queueEnabled: boolean;
+  slotActive: boolean;
   updatedAt: Date;
 }
 
@@ -69,6 +74,11 @@ export interface ConfigurationDTO {
   timerDurationSec: number;
   timerExpiresAt: string | null;
   paused: boolean;
+  feeClaimEnabled: boolean;
+  feeClaimIntervalSec: number;
+  buybackEnabled: boolean;
+  queueEnabled: boolean;
+  slotActive: boolean;
   updatedAt: string;
 }
 
@@ -164,7 +174,8 @@ export type WsServerMessage =
   | { type: "winners:update"; data: WinnerHistoryEntry[] }
   | { type: "config:update"; data: ConfigurationDTO }
   | { type: "spin:result"; data: SpinResultEvent }
-  | { type: "reward:balance"; data: { balanceSol: number } };
+  | { type: "reward:balance"; data: { balanceSol: number } }
+  | { type: "burn:update"; data: BurnStatsDTO };
 
 // ─── Admin Config Update Request ─────────────────────────
 
@@ -175,4 +186,21 @@ export interface UpdateConfigRequest {
   rewardPercent?: number;
   timerDurationSec?: number;
   paused?: boolean;
+  feeClaimIntervalSec?: number;
+}
+
+// ─── System Status ──────────────────────────────────────
+
+export interface SystemStatus {
+  feeClaimEnabled: boolean;
+  buybackEnabled: boolean;
+  queueEnabled: boolean;
+  slotActive: boolean;
+}
+
+// ─── Burn Stats ─────────────────────────────────────────
+
+export interface BurnStatsDTO {
+  totalBurned: string;
+  lastBurnAt: string | null;
 }

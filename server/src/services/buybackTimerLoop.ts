@@ -1,9 +1,13 @@
 import prisma from "../lib/db.js";
 import {
   getVerificationWalletBalance,
+  getRewardWalletBalance,
   transferToCreator,
+  transferToReward,
   buybackAndBurn,
 } from "./solana.js";
+import { wsBroadcaster } from "./wsServer.js";
+import { getBurnStats } from "../lib/queries.js";
 
 const CHECK_INTERVAL_MS = 5_000;
 
@@ -19,19 +23,37 @@ async function checkTimer(): Promise<void> {
 
     if (config.timerExpiresAt.getTime() > Date.now()) return;
 
-    // Timer expired — trigger Verification → Creator transfer
+    // Timer expired — trigger Verification → Creator (80%) + Reward (20%)
     const balance = await getVerificationWalletBalance();
 
     if (balance > 0) {
-      const transferAmount = balance * 0.9;
-      const tx = await transferToCreator(transferAmount);
+      const creatorAmount = balance * 0.8;
+      const rewardAmount = balance * 0.2;
+
+      const tx = await transferToCreator(creatorAmount);
 
       console.log(
-        `Buyback timer: transferred ${transferAmount} SOL to Creator (tx: ${tx})`,
+        `Buyback timer: transferred ${creatorAmount} SOL to Creator (tx: ${tx})`,
       );
 
-      // Buyback+burn using 50% of the transferred amount (per spec)
-      const buybackAmount = transferAmount * 0.5;
+      // Transfer 20% to reward wallet
+      try {
+        await transferToReward(rewardAmount);
+        console.log(
+          `Buyback timer: transferred ${rewardAmount} SOL to Reward`,
+        );
+
+        const newBalance = await getRewardWalletBalance();
+        wsBroadcaster.broadcast({
+          type: "reward:balance",
+          data: { balanceSol: newBalance },
+        });
+      } catch (rewardErr) {
+        console.error("Buyback timer: reward transfer failed:", rewardErr);
+      }
+
+      // Buyback+burn using 50% of the creator amount (per spec)
+      const buybackAmount = creatorAmount * 0.5;
       try {
         const { buybackTx, burnTx, tokensBurned } =
           await buybackAndBurn(buybackAmount);
@@ -41,7 +63,7 @@ async function checkTimer(): Promise<void> {
             transferTxSignature: tx,
             buybackTxSignature: buybackTx,
             burnTxSignature: burnTx,
-            solAmount: transferAmount,
+            solAmount: creatorAmount,
             tokensBurned: tokensBurned,
           },
         });
@@ -49,12 +71,16 @@ async function checkTimer(): Promise<void> {
         console.log(
           `Buyback timer: bought back & burned ${tokensBurned} tokens for ${buybackAmount} SOL`,
         );
+
+        // Broadcast updated burn stats
+        const burnStats = await getBurnStats();
+        wsBroadcaster.broadcast({ type: "burn:update", data: burnStats });
       } catch (bbErr) {
         // Still record the transfer even if buyback fails
         await prisma.buybackBurn.create({
           data: {
             transferTxSignature: tx,
-            solAmount: transferAmount,
+            solAmount: creatorAmount,
           },
         });
         console.error("Buyback timer: buyback+burn failed:", bbErr);
@@ -99,4 +125,8 @@ export function stopBuybackTimerLoop(): void {
     intervalId = null;
     console.log("Buyback timer loop stopped");
   }
+}
+
+export function isBuybackTimerRunning(): boolean {
+  return intervalId !== null;
 }

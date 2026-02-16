@@ -27,24 +27,46 @@ app.use(router);
 const server = app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
-  // Load token mint address from database config
+  // Load config from database
+  let config;
   try {
-    const config = await prisma.configuration.findFirst({ where: { id: 1 } });
+    config = await prisma.configuration.findFirst({ where: { id: 1 } });
     if (config) {
       setTokenMintAddress(config.tokenCA);
     }
   } catch (err) {
-    console.error("Failed to load token CA from database:", err);
+    console.error("Failed to load config from database:", err);
   }
 
   wsBroadcaster.attach(server);
 
+  // Always start queue processor (it checks slotActive/paused internally)
   queueProcessor.start().catch((err) => {
     console.error("Failed to start QueueProcessor:", err);
   });
-  startFeeClaimLoop();
-  startBuybackTimerLoop();
-  walletMonitor.start().catch((err) => {
-    console.error("Failed to start WalletMonitor:", err);
-  });
+
+  // Conditionally start subsystems based on DB flags
+  if (config?.feeClaimEnabled) {
+    startFeeClaimLoop(config.feeClaimIntervalSec * 1000);
+  } else {
+    console.log("Fee claim loop: disabled (toggle via admin panel)");
+  }
+
+  if (config?.buybackEnabled) {
+    startBuybackTimerLoop();
+  } else {
+    console.log("Buyback timer loop: disabled (toggle via admin panel)");
+  }
+
+  if (config?.queueEnabled) {
+    walletMonitor.start().catch((err) => {
+      console.error("Failed to start WalletMonitor:", err);
+    });
+  } else {
+    console.log("Wallet monitor: disabled (toggle via admin panel)");
+  }
+
+  if (!config?.slotActive) {
+    console.log("Slot machine: inactive (toggle via admin panel)");
+  }
 });

@@ -50,9 +50,9 @@ class QueueProcessor {
   private async tick(): Promise<void> {
     if (this.processing || this.queue.length === 0) return;
 
-    // Check if paused
+    // Check if paused or slot inactive
     const config = await prisma.configuration.findFirst();
-    if (config?.paused) return;
+    if (config?.paused || !config?.slotActive) return;
 
     this.processing = true;
     try {

@@ -51,6 +51,13 @@ class WalletMonitor {
     if (this.processedSignatures.has(signature)) return;
     this.processedSignatures.add(signature);
 
+    // Check if queue is enabled
+    const cfg = await prisma.configuration.findFirst();
+    if (cfg && !cfg.queueEnabled) {
+      console.log("WalletMonitor: queue disabled, ignoring transfer");
+      return;
+    }
+
     // Prevent unbounded growth
     if (this.processedSignatures.size > 1000) {
       const entries = [...this.processedSignatures];

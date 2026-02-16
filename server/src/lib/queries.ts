@@ -1,6 +1,6 @@
 import prisma from "./db.js";
 import { serializeWinner } from "./serialize.js";
-import type { QueueEntry, WinnerHistoryEntry } from "@shared/types";
+import type { QueueEntry, WinnerHistoryEntry, BurnStatsDTO } from "@shared/types";
 
 export async function getQueueEntries(): Promise<QueueEntry[]> {
   const pending = await prisma.spinTransaction.findMany({
@@ -36,4 +36,16 @@ export async function getWinnerEntries(
         w as typeof w & { reward: NonNullable<typeof w.reward> },
       ),
     );
+}
+
+export async function getBurnStats(): Promise<BurnStatsDTO> {
+  const result = await prisma.buybackBurn.aggregate({
+    _sum: { tokensBurned: true },
+    _max: { createdAt: true },
+  });
+
+  return {
+    totalBurned: (result._sum.tokensBurned ?? 0n).toString(),
+    lastBurnAt: result._max.createdAt?.toISOString() ?? null,
+  };
 }

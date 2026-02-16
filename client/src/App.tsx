@@ -7,7 +7,7 @@ import { getRewardBalance } from "./lib/api";
 import Layout from "./components/Layout";
 import AdminPanel from "./components/admin/AdminPanel";
 import NotificationToast from "./components/NotificationToast";
-import type { SpinResultEvent, WsServerMessage } from "@shared/types";
+import type { SpinResultEvent, WsServerMessage, BurnStatsDTO } from "@shared/types";
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash);
@@ -28,6 +28,7 @@ function App() {
   const { winners, applyWinners } = useWinners();
   const [rewardBalance, setRewardBalance] = useState<number | null>(null);
   const [spinResult, setSpinResult] = useState<SpinResultEvent | null>(null);
+  const [burnUpdate, setBurnUpdate] = useState<BurnStatsDTO | null>(null);
 
   // Fetch initial reward balance
   useEffect(() => {
@@ -53,6 +54,9 @@ function App() {
           break;
         case "reward:balance":
           setRewardBalance(msg.data.balanceSol);
+          break;
+        case "burn:update":
+          setBurnUpdate(msg.data);
           break;
       }
     },
@@ -83,6 +87,7 @@ function App() {
         rewardBalance={rewardBalance}
         spinResult={spinResult}
         onSpinResultDone={() => setSpinResult(null)}
+        burnUpdate={burnUpdate}
       />
       <NotificationToast newEntries={newEntries} onConsumed={clearNewEntries} />
     </>
