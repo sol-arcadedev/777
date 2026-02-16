@@ -6,33 +6,40 @@ interface RulesProps {
 export default function Rules({ requiredHoldings, minSolTransfer }: RulesProps) {
   return (
     <div
-      className="p-3"
+      className="p-4"
       style={{
-        background: "linear-gradient(180deg, #0a0a0a 0%, #111 100%)",
+        background: "linear-gradient(180deg, rgba(10,10,10,0.92) 0%, rgba(17,17,17,0.92) 100%)",
         border: "3px solid #daa520",
-        boxShadow: "3px 3px 0 rgba(0,0,0,0.5)",
+        boxShadow: "3px 3px 0 rgba(0,0,0,0.5), 0 0 10px rgba(0,0,0,0.5)",
+        backdropFilter: "blur(4px)",
       }}
     >
-      <h2 className="text-[9px] uppercase tracking-wider text-gold mb-2">
+      <h2 className="text-[11px] uppercase tracking-wider text-gold mb-3">
         HOW TO PLAY
       </h2>
-      <ol className="text-[7px] text-cream/70 space-y-2 list-decimal list-inside">
+      <ol className="text-[9px] text-cream/70 space-y-3 list-none">
         <li>
-          HOLD <span className="text-gold">{Number(requiredHoldings).toLocaleString()}</span> 777 TOKENS
+          <span className="text-gold-dim mr-1">[1]</span>
+          HOLD <span className="text-gold font-bold">{Number(requiredHoldings).toLocaleString()}</span> 777 TOKENS
         </li>
         <li>
-          SEND <span className="text-gold">{minSolTransfer} SOL</span> TO VERIFICATION WALLET
+          <span className="text-gold-dim mr-1">[2]</span>
+          SEND <span className="text-gold font-bold">{minSolTransfer} SOL</span> TO VERIFICATION WALLET
         </li>
         <li>
-          WIN CHANCE INCREASES OVER TIME (<span className="text-win-green">2% &rarr; 8%</span>)
+          <span className="text-gold-dim mr-1">[3]</span>
+          WIN CHANCE INCREASES OVER TIME (<span className="text-win-green font-bold">2% &rarr; 8%</span>)
         </li>
         <li>
-          REWARD DECREASES AS CHANCE RISES (<span className="text-gold">40% &rarr; 10%</span>)
+          <span className="text-gold-dim mr-1">[4]</span>
+          REWARD DECREASES AS CHANCE RISES (<span className="text-gold font-bold">40% &rarr; 10%</span>)
         </li>
         <li>
-          CYCLE RESETS EVERY <span className="text-gold">60 MIN</span>
+          <span className="text-gold-dim mr-1">[5]</span>
+          CYCLE RESETS EVERY <span className="text-gold font-bold">60 MIN</span>
         </li>
         <li>
+          <span className="text-gold-dim mr-1">[6]</span>
           BUSY? YOU JOIN THE QUEUE
         </li>
       </ol>

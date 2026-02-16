@@ -8,7 +8,14 @@ interface SlotDisplayProps {
 export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
   if (!activeSpin) {
     return (
-      <div className="text-center text-[8px] text-gold-dim/50 py-2">
+      <div
+        className="w-full max-w-[420px] text-center text-[8px] text-gold-dim/30 py-2 px-4"
+        style={{
+          background: "rgba(13,94,46,0.3)",
+          border: "2px solid rgba(42,110,63,0.3)",
+          boxShadow: "2px 2px 0 rgba(0,0,0,0.2)",
+        }}
+      >
         NO ACTIVE SPIN
       </div>
     );
@@ -16,20 +23,34 @@ export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
 
   return (
     <div
-      className="flex items-center justify-center gap-6 text-[8px] px-4 py-2"
+      key={`${activeSpin.holderAddress}-${activeSpin.solTransferred}`}
+      className="w-full max-w-[420px] flex items-center justify-center gap-6 text-[8px] px-4 py-2 animate-slide-up"
       style={{
         background: "#0d5e2e",
-        border: "2px solid #2a6e3f",
-        boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
+        border: "2px solid #00ff41",
+        boxShadow: "2px 2px 0 rgba(0,0,0,0.4), 0 0 8px rgba(0,255,65,0.2)",
+        animation: "slide-up-enter 0.4s steps(8) forwards, neon-spin-pulse 1.5s steps(4) infinite 0.4s",
       }}
     >
-      <div>
-        <span className="text-gold-dim">SPINNER: </span>
-        <span className="text-gold">{formatAddress(activeSpin.holderAddress)}</span>
+      {/* Pulsing dot */}
+      <div className="flex items-center gap-1.5">
+        <div
+          className="animate-pulse-dot"
+          style={{
+            width: "6px",
+            height: "6px",
+            backgroundColor: "#00ff41",
+            borderRadius: "50%",
+            boxShadow: "0 0 4px #00ff41",
+          }}
+        />
+        <span className="text-win-green font-bold text-[9px]">NOW SPINNING</span>
       </div>
       <div>
-        <span className="text-gold-dim">SOL: </span>
-        <span className="text-cream">{activeSpin.solTransferred}</span>
+        <span className="text-gold text-[9px]">{formatAddress(activeSpin.holderAddress)}</span>
+      </div>
+      <div>
+        <span className="text-cream">{activeSpin.solTransferred} SOL</span>
       </div>
     </div>
   );

@@ -12,8 +12,9 @@ interface SlotMachineProps {
 type Phase = "idle" | "spinning" | "stopping" | "result";
 type ReelState = "spinning" | "stopped";
 
+const MIN_SPIN_MS = 2000;
+const STAGGER_DELAY_MS = 600;
 const RESULT_DISPLAY_MS = 3500;
-const STAGGER_DELAY_MS = 500;
 const STRIP_LENGTH = 15;
 
 const ALL_SYMBOLS: ReelSymbol[] = ["7", "SOL", "X"];
@@ -27,7 +28,7 @@ function generateStrip(): ReelSymbol[] {
 }
 
 /** Inline Solana logo SVG */
-function SolanaLogo({ size = 40 }: { size?: number }) {
+function SolanaLogo({ size = 48 }: { size?: number }) {
   return (
     <svg
       width={size}
@@ -66,12 +67,12 @@ function SymbolDisplay({
   size?: "large" | "small";
 }) {
   const textClass =
-    size === "large" ? "text-5xl" : "text-2xl";
+    size === "large" ? "text-6xl" : "text-2xl";
 
   if (symbol === "SOL") {
     return (
       <div className="flex items-center justify-center">
-        <SolanaLogo size={size === "large" ? 40 : 20} />
+        <SolanaLogo size={size === "large" ? 48 : 20} />
       </div>
     );
   }
@@ -109,7 +110,7 @@ function Reel({
 }) {
   return (
     <div
-      className="w-20 h-24 bg-casino-dark border-3 border-brass overflow-hidden flex items-center justify-center"
+      className="w-24 h-28 bg-casino-dark border-3 border-brass overflow-hidden flex items-center justify-center scanlines"
       style={{
         boxShadow:
           "inset 0 2px 8px rgba(0,0,0,0.6), 2px 2px 0 rgba(0,0,0,0.4)",
@@ -120,7 +121,7 @@ function Reel({
           {strip.map((s, i) => (
             <div
               key={i}
-              className="h-24 flex items-center justify-center shrink-0"
+              className="h-28 flex items-center justify-center shrink-0"
             >
               <SymbolDisplay symbol={s} />
             </div>
@@ -184,11 +185,12 @@ function Lever({ pulling }: { pulling: boolean }) {
 }
 
 function ConfettiParticle({ index }: { index: number }) {
-  const colors = ["#ffd700", "#ffe44d", "#00ff41", "#60a5fa", "#f472b6"];
+  const colors = ["#ffd700", "#ffe44d", "#00ff41", "#60a5fa", "#f472b6", "#ff6b6b"];
   const color = colors[index % colors.length];
   const left = Math.random() * 100;
   const delay = Math.random() * 0.5;
   const duration = 1.5 + Math.random();
+  const size = 6 + Math.random() * 6; // 6px-12px varied sizes
 
   return (
     <div
@@ -196,6 +198,8 @@ function ConfettiParticle({ index }: { index: number }) {
       style={{
         left: `${left}%`,
         backgroundColor: color,
+        width: `${size}px`,
+        height: `${size}px`,
         animationDelay: `${delay}s`,
         animationDuration: `${duration}s`,
       }}
@@ -222,6 +226,7 @@ export default function SlotMachine({
   const [leverPull, setLeverPull] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const staggerTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const spinStartRef = useRef<number>(0);
 
   // Generate random strips for spinning animation (regenerate each spin)
   const strips = useMemo(
@@ -240,36 +245,49 @@ export default function SlotMachine({
 
   useEffect(() => {
     if (spinResult) {
-      // Start staggered stop sequence
-      setPhase("stopping");
-      setDisplayResult(spinResult);
+      // Enforce minimum spin duration before stopping reels
+      const elapsed = Date.now() - spinStartRef.current;
+      const remaining = Math.max(0, MIN_SPIN_MS - elapsed);
 
-      // Stop left reel first
-      setReelStates(["stopped", "spinning", "spinning"]);
+      const stopReels = () => {
+        setPhase("stopping");
+        setDisplayResult(spinResult);
 
-      // Stop middle reel after delay
-      const t1 = setTimeout(() => {
-        setReelStates(["stopped", "stopped", "spinning"]);
-      }, STAGGER_DELAY_MS);
+        // Stop left reel first
+        setReelStates(["stopped", "spinning", "spinning"]);
 
-      // Stop right reel after another delay, then show result
-      const t2 = setTimeout(() => {
-        setReelStates(["stopped", "stopped", "stopped"]);
-        setPhase("result");
-      }, STAGGER_DELAY_MS * 2);
+        // Stop middle reel after delay
+        const t1 = setTimeout(() => {
+          setReelStates(["stopped", "stopped", "spinning"]);
+        }, STAGGER_DELAY_MS);
 
-      staggerTimers.current = [t1, t2];
+        // Stop right reel after another delay, then show result
+        const t2 = setTimeout(() => {
+          setReelStates(["stopped", "stopped", "stopped"]);
+          setPhase("result");
+        }, STAGGER_DELAY_MS * 2);
 
-      // Auto-dismiss result after display period
-      timerRef.current = setTimeout(() => {
-        setPhase("idle");
-        setDisplayResult(null);
-        setReelStates(["stopped", "stopped", "stopped"]);
-        onResultDone();
-      }, STAGGER_DELAY_MS * 2 + RESULT_DISPLAY_MS);
+        staggerTimers.current = [t1, t2];
+
+        // Auto-dismiss result after display period
+        timerRef.current = setTimeout(() => {
+          setPhase("idle");
+          setDisplayResult(null);
+          setReelStates(["stopped", "stopped", "stopped"]);
+          onResultDone();
+        }, STAGGER_DELAY_MS * 2 + RESULT_DISPLAY_MS);
+      };
+
+      if (remaining > 0) {
+        const waitTimer = setTimeout(stopReels, remaining);
+        staggerTimers.current = [waitTimer];
+      } else {
+        stopReels();
+      }
     } else if (isSpinning && phase !== "result" && phase !== "stopping") {
       setPhase("spinning");
       setReelStates(["spinning", "spinning", "spinning"]);
+      spinStartRef.current = Date.now();
       setLeverPull(true);
       setTimeout(() => setLeverPull(false), 600);
     } else if (!isSpinning && phase !== "result" && phase !== "stopping") {
@@ -308,7 +326,7 @@ export default function SlotMachine({
 
   const containerClass = [
     "relative overflow-hidden",
-    phase === "spinning" && "animate-glow",
+    phase === "spinning" && "animate-spin-glow",
     showingResult && isWin && "win-glow",
     showingResult && isRefund && "refund-glow",
     showingResult && isLose && "lose-flash",
@@ -316,12 +334,26 @@ export default function SlotMachine({
     .filter(Boolean)
     .join(" ");
 
+  // Cabinet border color changes during spinning
+  const cabinetBorderColor = phase === "spinning" ? "#00ff41" : "#daa520";
+
   return (
     <div className={containerClass}>
-      {/* Confetti overlay for wins */}
+      {/* Jackpot flash overlay */}
+      {showingResult && isWin && (
+        <div
+          className="absolute inset-0 pointer-events-none z-20"
+          style={{
+            background: "radial-gradient(circle, rgba(255,215,0,0.4), transparent 70%)",
+            animation: "jackpot-flash 1s steps(4) 2",
+          }}
+        />
+      )}
+
+      {/* Confetti overlay for wins — 30 particles */}
       {showingResult && isWin && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-          {Array.from({ length: 20 }).map((_, i) => (
+          {Array.from({ length: 30 }).map((_, i) => (
             <ConfettiParticle key={i} index={i} />
           ))}
         </div>
@@ -333,11 +365,13 @@ export default function SlotMachine({
         style={{
           background:
             "linear-gradient(180deg, #5c0000 0%, #8b0000 30%, #6b0000 100%)",
-          border: "4px solid #daa520",
-          boxShadow:
-            "4px 4px 0 rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3), 0 0 12px rgba(218,165,32,0.3)",
+          border: `4px solid ${cabinetBorderColor}`,
+          boxShadow: phase === "spinning"
+            ? "0 0 20px #00ff41, 0 0 40px rgba(0,255,65,0.3), 4px 4px 0 rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3)"
+            : "4px 4px 0 rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3), 0 0 12px rgba(218,165,32,0.3)",
           padding: "12px 16px",
-          minWidth: "340px",
+          minWidth: "360px",
+          transition: "border-color 0.3s, box-shadow 0.3s",
         }}
       >
         {/* Top Marquee */}
@@ -384,18 +418,18 @@ export default function SlotMachine({
         </div>
 
         {/* Result Display */}
-        <div className="mt-3 text-center min-h-[24px]">
+        <div className="mt-3 text-center min-h-[28px]">
           {showingResult &&
             isWin &&
             displayResult.rewardSol !== null && (
-              <div className="text-win-green text-sm font-bold animate-bounce-in">
+              <div className="text-win-green text-base font-bold animate-bounce-in animate-win-amount-pulse">
                 +{displayResult.rewardSol.toFixed(4)} SOL
               </div>
             )}
 
           {showingResult && isRefund && displayResult.refundSol !== null && (
             <div
-              className="text-sm font-bold animate-bounce-in"
+              className="text-base font-bold animate-bounce-in"
               style={{ color: "#14F195" }}
             >
               REFUND! +{displayResult.refundSol.toFixed(4)} SOL
