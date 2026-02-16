@@ -1,4 +1,4 @@
-# 777 — The Creator Fee Slot
+# 777 -The Creator Fee Slot
 
 A Solana-powered slot machine platform where token holders spin to win SOL rewards funded by PumpFun creator fees. Built for the 777 token launched on PumpFun.
 
@@ -8,9 +8,9 @@ A Solana-powered slot machine platform where token holders spin to win SOL rewar
 
 ### Spin Requirements
 
-1. **Hold tokens** — A minimum amount of 777 tokens (configurable, default: 500,000)
-2. **Transfer SOL** — Send the minimum SOL amount to the Verification Wallet (configurable, default: 0.01 SOL)
-3. **Spin or queue** — The slot spins immediately or the holder joins a waiting queue
+1. **Hold tokens** -A minimum amount of 777 tokens (configurable, default: 500,000)
+2. **Transfer SOL** -Send the minimum SOL amount to the Verification Wallet (configurable, default: 0.01 SOL)
+3. **Spin or queue** -The slot spins immediately or the holder joins a waiting queue
 
 ### Win Mechanics
 
@@ -49,9 +49,9 @@ A Solana-powered slot machine platform where token holders spin to win SOL rewar
 
 ### Automated Processes
 
-- **Fee claiming** — Creator fees are auto-claimed at a configurable interval (default: every 30 seconds) and split between Treasury (70%) and Reward (30%) wallets
-- **Buyback and burn** — On timer expiry, SOL is forwarded from the Verification Wallet to the Creator Wallet, where a portion is used to buy back 777 tokens and burn them
-- **Reward updates** — The reward display updates in real-time via WebSocket as the Reward Wallet balance changes
+- **Fee claiming** -Creator fees are auto-claimed at a configurable interval (default: every 30 seconds) and split between Treasury (70%) and Reward (30%) wallets
+- **Buyback and burn** -On timer expiry, SOL is forwarded from the Verification Wallet to the Creator Wallet, where a portion is used to buy back 777 tokens and burn them
+- **Reward updates** -The reward display updates in real-time via WebSocket as the Reward Wallet balance changes
 
 ## Features
 
