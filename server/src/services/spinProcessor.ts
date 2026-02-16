@@ -55,11 +55,37 @@ class QueueProcessor {
     if (config?.paused || !config?.slotActive) return;
 
     this.processing = true;
+    const spinId = this.queue.shift()!;
     try {
-      const spinId = this.queue.shift()!;
       await this.processSpin(spinId);
     } catch (err) {
       console.error("QueueProcessor: error processing spin:", err);
+      // Mark failed spin as LOSE so it doesn't loop forever
+      try {
+        await prisma.spinTransaction.update({
+          where: { id: spinId },
+          data: { result: "LOSE" },
+        });
+        console.log(`Spin #${spinId}: LOSE (processing error)`);
+        const reelSymbols = generateReelSymbols("LOSE");
+        this.broadcastResult({
+          spinId,
+          holderAddress: "unknown",
+          result: "LOSE",
+          solTransferred: 0,
+          winChance: 0,
+          rewardSol: null,
+          refundSol: null,
+          txSignature: null,
+          reelSymbols,
+        });
+        wsBroadcaster.broadcast({
+          type: "queue:update",
+          data: await getQueueEntries(),
+        });
+      } catch (cleanupErr) {
+        console.error("QueueProcessor: failed to mark spin as LOSE:", cleanupErr);
+      }
     } finally {
       this.processing = false;
     }
