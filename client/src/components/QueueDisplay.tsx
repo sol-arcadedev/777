@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatAddress } from "../lib/utils";
 import type { QueueEntry } from "@shared/types";
 
@@ -6,6 +7,14 @@ interface QueueDisplayProps {
 }
 
 export default function QueueDisplay({ waiting }: QueueDisplayProps) {
+  const [search, setSearch] = useState("");
+
+  const filtered = search.trim()
+    ? waiting.filter((e) =>
+        e.holderAddress.toLowerCase().includes(search.trim().toLowerCase()),
+      )
+    : waiting;
+
   return (
     <div
       className="p-3 w-full max-w-[420px]"
@@ -16,33 +25,64 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
         backdropFilter: "blur(4px)",
       }}
     >
-      <h2 className="text-[9px] uppercase tracking-wider text-gold mb-2">
-        SPIN QUEUE ({waiting.length})
-      </h2>
+      <div className="flex items-center justify-between mb-2">
+        <h2 className="text-[9px] uppercase tracking-wider text-gold">
+          SPIN QUEUE ({waiting.length})
+        </h2>
+        {waiting.length > 3 && (
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="SEARCH ADDRESS..."
+            className="bg-casino-dark border border-gold-dim/40 px-2 py-0.5 text-[7px] text-cream placeholder:text-gold-dim/30 focus:border-gold focus:outline-none w-32"
+          />
+        )}
+      </div>
 
       {waiting.length === 0 ? (
         <div className="text-[8px] text-gold-dim/50 text-center py-3">
           NO SPINS WAITING
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-[8px] text-gold-dim/50 text-center py-3">
+          NO MATCHING ADDRESS
+        </div>
       ) : (
         <div className="space-y-1 max-h-40 overflow-y-auto">
-          {waiting.map((entry, i) => (
-            <div
-              key={`${entry.holderAddress}-${entry.queuePosition}`}
-              className="flex items-center justify-between text-[7px] px-2 py-1.5 animate-slide-in-left"
-              style={{
-                background: i === 0 ? "#0d7e3e" : i % 2 === 0 ? "#0d5e2e" : "#0b5028",
-                border: i === 0 ? "1px solid #00ff41" : "1px solid #2a6e3f",
-                boxShadow: i === 0 ? "0 0 4px rgba(0,255,65,0.2)" : "none",
-              }}
-            >
-              <span className="text-gold font-bold">
-                {i === 0 ? "NEXT" : `#${i + 1}`}
-              </span>
-              <span className="text-cream">{formatAddress(entry.holderAddress)}</span>
-              <span className="text-cream">{entry.solTransferred} SOL</span>
-            </div>
-          ))}
+          {filtered.map((entry, i) => {
+            const position = waiting.indexOf(entry) + 1;
+            const isNext = position === 1;
+            const isSearchHit = search.trim().length > 0;
+
+            return (
+              <div
+                key={`${entry.holderAddress}-${entry.queuePosition}`}
+                className="flex items-center justify-between text-[7px] px-2 py-1.5 animate-slide-in-left"
+                style={{
+                  background: isSearchHit
+                    ? "#3d2a00"
+                    : isNext
+                      ? "#0d7e3e"
+                      : i % 2 === 0
+                        ? "#0d5e2e"
+                        : "#0b5028",
+                  border: isSearchHit
+                    ? "1px solid #daa520"
+                    : isNext
+                      ? "1px solid #00ff41"
+                      : "1px solid #2a6e3f",
+                  boxShadow: isNext ? "0 0 4px rgba(0,255,65,0.2)" : "none",
+                }}
+              >
+                <span className="text-gold font-bold w-8">
+                  {isNext && !isSearchHit ? "NEXT" : `#${position}`}
+                </span>
+                <span className="text-cream flex-1 ml-1">{formatAddress(entry.holderAddress)}</span>
+                <span className="text-cream ml-2">{entry.solTransferred} SOL</span>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
