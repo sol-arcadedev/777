@@ -3,6 +3,7 @@ import prisma from "../lib/db.js";
 import { serializeSpin } from "../lib/serialize.js";
 import { getQueueEntries } from "../lib/queries.js";
 import { queueProcessor } from "../services/spinProcessor.js";
+import { checkTokenBalance } from "../services/solana.js";
 import type { SubmitSpinRequest, SubmitSpinResponse } from "@shared/types";
 
 const router = Router();
@@ -51,6 +52,13 @@ router.post("/api/spin", async (req, res) => {
       res.status(400).json({
         error: `solTransferred must be at least ${config.minSolTransfer} SOL`,
       });
+      return;
+    }
+
+    // Check token balance before allowing queue entry
+    const hasTokens = await checkTokenBalance(holderAddress, config.requiredHoldings);
+    if (!hasTokens) {
+      res.status(403).json({ error: "Insufficient 777 token holdings" });
       return;
     }
 

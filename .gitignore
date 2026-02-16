@@ -7,3 +7,5 @@ dist/
 .vscode/
 CLAUDE.md
 scripts/
+dev-test-wallets.txt
+dev-setup-token.mjs

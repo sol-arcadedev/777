@@ -10,6 +10,7 @@ import {
 import bs58 from "bs58";
 import prisma from "../lib/db.js";
 import { queueProcessor } from "../services/spinProcessor.js";
+import { checkTokenBalance } from "../services/solana.js";
 import {
   connection,
   verificationWallet,
@@ -122,6 +123,13 @@ router.post("/api/dev/simulate-transfer", async (req, res) => {
       res.status(400).json({
         error: `solAmount must be at least ${config.minSolTransfer} SOL`,
       });
+      return;
+    }
+
+    // Check token balance before allowing queue entry
+    const hasTokens = await checkTokenBalance(holderAddress, config.requiredHoldings);
+    if (!hasTokens) {
+      res.status(403).json({ error: "Insufficient 777 token holdings" });
       return;
     }
 
