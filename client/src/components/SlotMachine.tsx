@@ -322,7 +322,8 @@ export default function SlotMachine({
           setPhase("idle");
           setDisplayResult(null);
           setReelStates(["stopped", "stopped", "stopped"]);
-          handledResultRef.current = null;
+          // Keep handledResultRef set — cleared only when isSpinning goes false
+          // This prevents re-spinning if activeSpin hasn't been cleared yet
           onResultDone();
         }, STAGGER_DELAY_MS * 2 + RESULT_DISPLAY_MS);
       };
@@ -333,7 +334,8 @@ export default function SlotMachine({
       } else {
         stopReels();
       }
-    } else if (!spinResult && isSpinning && phase !== "result" && phase !== "stopping") {
+    } else if (!spinResult && isSpinning && !handledResultRef.current && phase !== "result" && phase !== "stopping") {
+      // Only start spinning for a genuinely new spin (not one we already showed a result for)
       clearAllTimers();
       setPhase("spinning");
       setReelStates(["spinning", "spinning", "spinning"]);
@@ -341,6 +343,8 @@ export default function SlotMachine({
       setLeverPull(true);
       setTimeout(() => setLeverPull(false), 600);
     } else if (!spinResult && !isSpinning && phase !== "result" && phase !== "stopping") {
+      // Clear the handled ref when isSpinning goes false (spin fully done, queue cleared)
+      handledResultRef.current = null;
       setPhase("idle");
     }
     // No cleanup — timers are managed explicitly above.
