@@ -15,7 +15,6 @@ import { walletMonitor } from "../services/walletMonitor.js";
 import { wsBroadcaster } from "../services/wsServer.js";
 import { serializeConfig } from "../lib/serialize.js";
 import { getBurnStats } from "../lib/queries.js";
-import { getDynamicValues } from "../services/dynamicEscalation.js";
 import type { SystemStatus } from "@shared/types";
 
 const router = Router();
@@ -227,15 +226,9 @@ router.post("/api/admin/toggle-slot", adminAuth, async (_req, res) => {
     const config = await prisma.configuration.findFirst();
     const newState = !config?.slotActive;
 
-    const updateData: Record<string, unknown> = { slotActive: newState };
-    // Start escalation cycle when slot is turned ON (if not already started)
-    if (newState && !config?.escalationStartedAt) {
-      updateData.escalationStartedAt = new Date();
-    }
-
     await prisma.configuration.update({
       where: { id: 1 },
-      data: updateData,
+      data: { slotActive: newState },
     });
 
     const updated = await prisma.configuration.findUnique({ where: { id: 1 } });
@@ -266,43 +259,6 @@ router.get("/api/admin/system-status", adminAuth, async (_req, res) => {
   } catch (err) {
     console.error("GET /api/admin/system-status error:", err);
     res.status(500).json({ error: "Failed to fetch system status" });
-  }
-});
-
-// ─── Dynamic Escalation Values ────────────────────────
-
-router.get("/api/dynamic-values", async (_req, res) => {
-  try {
-    const config = await prisma.configuration.findFirst();
-    if (!config) {
-      res.status(500).json({ error: "No configuration found" });
-      return;
-    }
-    res.json(getDynamicValues(config));
-  } catch (err) {
-    console.error("GET /api/dynamic-values error:", err);
-    res.status(500).json({ error: "Failed to fetch dynamic values" });
-  }
-});
-
-router.post("/api/admin/reset-escalation", adminAuth, async (_req, res) => {
-  try {
-    await prisma.configuration.update({
-      where: { id: 1 },
-      data: { escalationStartedAt: new Date() },
-    });
-
-    const config = await prisma.configuration.findUnique({ where: { id: 1 } });
-    if (config) {
-      wsBroadcaster.broadcast({ type: "config:update", data: serializeConfig(config) });
-      wsBroadcaster.broadcast({ type: "dynamic:update", data: getDynamicValues(config) });
-    }
-
-    console.log("Escalation cycle reset");
-    res.json({ escalationStartedAt: new Date().toISOString() });
-  } catch (err) {
-    console.error("Reset escalation failed:", err);
-    res.status(500).json({ error: "Reset failed" });
   }
 });
 

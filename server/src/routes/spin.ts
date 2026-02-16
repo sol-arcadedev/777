@@ -2,7 +2,6 @@ import { Router } from "express";
 import prisma from "../lib/db.js";
 import { serializeSpin } from "../lib/serialize.js";
 import { getQueueEntries } from "../lib/queries.js";
-import { getDynamicValues } from "../services/dynamicEscalation.js";
 import { queueProcessor } from "../services/spinProcessor.js";
 import type { SubmitSpinRequest, SubmitSpinResponse } from "@shared/types";
 
@@ -55,8 +54,7 @@ router.post("/api/spin", async (req, res) => {
       return;
     }
 
-    // Get dynamic win chance (time-based, same for everyone)
-    const winChance = getDynamicValues(config).winChance;
+    const winChance = config.winChance;
 
     // Get next queue position
     const maxPos = await prisma.spinTransaction.aggregate({

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { resetEscalation } from "../../lib/api";
 import type { ConfigurationDTO, UpdateConfigRequest } from "@shared/types";
 
 interface ConfigFormProps {
@@ -13,11 +12,8 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
   const [tokenCA, setTokenCA] = useState(config.tokenCA);
   const [requiredHoldings, setRequiredHoldings] = useState(config.requiredHoldings);
   const [minSolTransfer, setMinSolTransfer] = useState(String(config.minSolTransfer));
-  const [winChanceStart, setWinChanceStart] = useState(String(config.winChanceStart));
-  const [winChanceEnd, setWinChanceEnd] = useState(String(config.winChanceEnd));
-  const [rewardPercentStart, setRewardPercentStart] = useState(String(config.rewardPercentStart));
-  const [rewardPercentEnd, setRewardPercentEnd] = useState(String(config.rewardPercentEnd));
-  const [escalationDurationMin, setEscalationDurationMin] = useState(String(config.escalationDurationMin));
+  const [winChance, setWinChance] = useState(String(config.winChance));
+  const [rewardPercent, setRewardPercent] = useState(String(config.rewardPercent));
   const [timerDurationSec, setTimerDurationSec] = useState(String(config.timerDurationSec));
   const [feeClaimIntervalSec, setFeeClaimIntervalSec] = useState(String(config.feeClaimIntervalSec));
   const [paused, setPaused] = useState(config.paused);
@@ -33,11 +29,8 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
         tokenCA,
         requiredHoldings,
         minSolTransfer: parseFloat(minSolTransfer),
-        winChanceStart: parseFloat(winChanceStart),
-        winChanceEnd: parseFloat(winChanceEnd),
-        rewardPercentStart: parseFloat(rewardPercentStart),
-        rewardPercentEnd: parseFloat(rewardPercentEnd),
-        escalationDurationMin: parseInt(escalationDurationMin, 10),
+        winChance: parseFloat(winChance),
+        rewardPercent: parseFloat(rewardPercent),
         timerDurationSec: parseInt(timerDurationSec, 10),
         feeClaimIntervalSec: parseInt(feeClaimIntervalSec, 10),
         paused,
@@ -47,15 +40,6 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
       setStatus(err instanceof Error ? err.message : "Save failed");
     } finally {
       setSaving(false);
-    }
-  };
-
-  const handleResetEscalation = async () => {
-    try {
-      await resetEscalation();
-      setStatus("Escalation reset");
-    } catch (err) {
-      setStatus(err instanceof Error ? err.message : "Reset failed");
     }
   };
 
@@ -92,74 +76,27 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
         />
       </div>
 
-      {/* Escalation Config */}
-      <div className="border-2 border-gold-dim/30 p-3 space-y-2">
-        <div className="text-[8px] text-gold uppercase tracking-wider mb-1">ESCALATION CYCLE</div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[7px] text-gold-dim mb-1 uppercase">WIN CHANCE START %</label>
-            <input
-              type="number"
-              step="0.5"
-              value={winChanceStart}
-              onChange={(e) => setWinChanceStart(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-[7px] text-gold-dim mb-1 uppercase">WIN CHANCE END %</label>
-            <input
-              type="number"
-              step="0.5"
-              value={winChanceEnd}
-              onChange={(e) => setWinChanceEnd(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-[7px] text-gold-dim mb-1 uppercase">REWARD % START</label>
-            <input
-              type="number"
-              step="1"
-              value={rewardPercentStart}
-              onChange={(e) => setRewardPercentStart(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label className="block text-[7px] text-gold-dim mb-1 uppercase">REWARD % END</label>
-            <input
-              type="number"
-              step="1"
-              value={rewardPercentEnd}
-              onChange={(e) => setRewardPercentEnd(e.target.value)}
-              className={inputClass}
-            />
-          </div>
-        </div>
-
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-[7px] text-gold-dim mb-1 uppercase">CYCLE DURATION (MIN)</label>
+          <label className="block text-[7px] text-gold-dim mb-1 uppercase">WIN CHANCE %</label>
           <input
             type="number"
-            value={escalationDurationMin}
-            onChange={(e) => setEscalationDurationMin(e.target.value)}
+            step="0.5"
+            value={winChance}
+            onChange={(e) => setWinChance(e.target.value)}
             className={inputClass}
           />
         </div>
-
-        <button
-          type="button"
-          onClick={handleResetEscalation}
-          className="w-full px-3 py-1.5 text-[8px] border-2 border-gold-dim text-gold-dim hover:border-gold hover:text-gold cursor-pointer uppercase"
-          style={{ boxShadow: "2px 2px 0 rgba(0,0,0,0.4)" }}
-        >
-          RESET ESCALATION CYCLE
-        </button>
+        <div>
+          <label className="block text-[7px] text-gold-dim mb-1 uppercase">REWARD %</label>
+          <input
+            type="number"
+            step="1"
+            value={rewardPercent}
+            onChange={(e) => setRewardPercent(e.target.value)}
+            className={inputClass}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
@@ -209,7 +146,7 @@ export default function ConfigForm({ config, onSave }: ConfigFormProps) {
           {saving ? "SAVING..." : "SAVE CONFIG"}
         </button>
         {status && (
-          <span className={`text-[8px] ${status === "Saved" || status === "Escalation reset" ? "text-win-green" : "text-lose-red"}`}>
+          <span className={`text-[8px] ${status === "Saved" ? "text-win-green" : "text-lose-red"}`}>
             {status}
           </span>
         )}

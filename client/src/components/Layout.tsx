@@ -1,4 +1,4 @@
-import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO, DynamicValues } from "@shared/types";
+import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO } from "@shared/types";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
 import SlotDisplay from "./SlotDisplay";
@@ -19,15 +19,10 @@ interface LayoutProps {
   spinResult: SpinResultEvent | null;
   onSpinResultDone: () => void;
   burnUpdate: BurnStatsDTO | null;
-  dynamicValues: DynamicValues | null;
 }
 
-export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate, dynamicValues }: LayoutProps) {
+export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate }: LayoutProps) {
   const isSpinning = activeSpin !== null;
-  const winChance = dynamicValues?.winChance ?? config.winChanceStart;
-  const rewardPercent = dynamicValues?.rewardPercent ?? config.rewardPercentStart;
-  const cycleProgress = dynamicValues?.cycleProgress ?? 0;
-  const cycleSecondsLeft = dynamicValues?.cycleSecondsLeft ?? config.escalationDurationMin * 60;
 
   return (
     <div
@@ -84,13 +79,11 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
           {/* Spin-relevant info cards — above slot */}
           <div className="grid grid-cols-2 gap-2 w-full max-w-[420px]">
             <WinChanceDisplay
-              winChance={winChance}
-              cycleSecondsLeft={cycleSecondsLeft}
+              winChance={config.winChance}
             />
             <RewardDisplay
-              rewardPercent={rewardPercent}
+              rewardPercent={config.rewardPercent}
               balanceSol={rewardBalance}
-              cycleProgress={cycleProgress}
             />
           </div>
 

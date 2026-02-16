@@ -1,7 +1,6 @@
 import { PublicKey } from "@solana/web3.js";
 import { connection, verificationWallet } from "../config/wallets.js";
 import { checkTokenBalance } from "./solana.js";
-import { getDynamicValues } from "./dynamicEscalation.js";
 import { queueProcessor } from "./spinProcessor.js";
 import { wsBroadcaster } from "./wsServer.js";
 import { getQueueEntries } from "../lib/queries.js";
@@ -113,8 +112,7 @@ class WalletMonitor {
         return;
       }
 
-      // Get dynamic win chance (time-based, same for everyone)
-      const winChance = getDynamicValues(config).winChance;
+      const winChance = config.winChance;
 
       const maxPos = await prisma.spinTransaction.aggregate({
         _max: { queuePosition: true },

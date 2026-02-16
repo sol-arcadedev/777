@@ -50,16 +50,10 @@ router.put("/api/config", adminAuth, async (req, res) => {
       data.requiredHoldings = BigInt(body.requiredHoldings);
     if (body.minSolTransfer !== undefined)
       data.minSolTransfer = body.minSolTransfer;
-    if (body.winChanceStart !== undefined)
-      data.winChanceStart = body.winChanceStart;
-    if (body.winChanceEnd !== undefined)
-      data.winChanceEnd = body.winChanceEnd;
-    if (body.rewardPercentStart !== undefined)
-      data.rewardPercentStart = body.rewardPercentStart;
-    if (body.rewardPercentEnd !== undefined)
-      data.rewardPercentEnd = body.rewardPercentEnd;
-    if (body.escalationDurationMin !== undefined)
-      data.escalationDurationMin = body.escalationDurationMin;
+    if (body.winChance !== undefined)
+      data.winChance = body.winChance;
+    if (body.rewardPercent !== undefined)
+      data.rewardPercent = body.rewardPercent;
     if (body.timerDurationSec !== undefined) {
       data.timerDurationSec = body.timerDurationSec;
       data.timerExpiresAt = new Date(
