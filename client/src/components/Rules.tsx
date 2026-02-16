@@ -1,9 +1,11 @@
 interface RulesProps {
   requiredHoldings: string;
   minSolTransfer: number;
+  winChance: number;
+  rewardPercent: number;
 }
 
-export default function Rules({ requiredHoldings, minSolTransfer }: RulesProps) {
+export default function Rules({ requiredHoldings, minSolTransfer, winChance, rewardPercent }: RulesProps) {
   return (
     <div
       className="p-4"
@@ -28,15 +30,15 @@ export default function Rules({ requiredHoldings, minSolTransfer }: RulesProps) 
         </li>
         <li>
           <span className="text-gold-dim mr-1">[3]</span>
-          WIN CHANCE INCREASES OVER TIME (<span className="text-win-green font-bold">2% &rarr; 8%</span>)
+          <span className="text-win-green font-bold">{winChance}%</span> CHANCE TO WIN ON EVERY SPIN
         </li>
         <li>
           <span className="text-gold-dim mr-1">[4]</span>
-          REWARD DECREASES AS CHANCE RISES (<span className="text-gold font-bold">40% &rarr; 10%</span>)
+          WIN <span className="text-gold font-bold">{rewardPercent}%</span> OF THE GROWING REWARD POT
         </li>
         <li>
           <span className="text-gold-dim mr-1">[5]</span>
-          CYCLE RESETS EVERY <span className="text-gold font-bold">60 MIN</span>
+          POT GROWS FROM CREATOR FEES — THE LONGER NO ONE WINS, THE BIGGER IT GETS
         </li>
         <li>
           <span className="text-gold-dim mr-1">[6]</span>

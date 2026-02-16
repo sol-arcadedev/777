@@ -58,6 +58,8 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
           <Rules
             requiredHoldings={config.requiredHoldings}
             minSolTransfer={config.minSolTransfer}
+            winChance={config.winChance}
+            rewardPercent={config.rewardPercent}
           />
         </div>
 
