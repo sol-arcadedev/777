@@ -30,7 +30,7 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
   useEffect(() => {
     const audio = new Audio("/sfx/Background_Music.mp3");
     audio.loop = true;
-    audio.volume = 0.05;
+    audio.volume = 0.02;
     bgMusicRef.current = audio;
 
     const startMusic = () => {
