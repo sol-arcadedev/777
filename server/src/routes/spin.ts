@@ -1,7 +1,7 @@
 import { Router } from "express";
 import prisma from "../lib/db.js";
 import { serializeSpin } from "../lib/serialize.js";
-import { getQueueEntries } from "../lib/queries.js";
+import { getQueueEntries, getSpinHistoryEntries } from "../lib/queries.js";
 import { queueProcessor } from "../services/spinProcessor.js";
 import { checkTokenBalance } from "../services/solana.js";
 import type { SubmitSpinRequest, SubmitSpinResponse } from "@shared/types";
@@ -19,6 +19,16 @@ router.get("/api/spins", async (req, res) => {
   } catch (err) {
     console.error("GET /api/spins error:", err);
     res.status(500).json({ error: "Failed to fetch spins" });
+  }
+});
+
+router.get("/api/spin-history", async (_req, res) => {
+  try {
+    const history = await getSpinHistoryEntries();
+    res.json(history);
+  } catch (err) {
+    console.error("GET /api/spin-history error:", err);
+    res.status(500).json({ error: "Failed to fetch spin history" });
   }
 });
 

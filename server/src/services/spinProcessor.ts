@@ -1,5 +1,5 @@
 import prisma from "../lib/db.js";
-import { getQueueEntries, getWinnerEntries } from "../lib/queries.js";
+import { getQueueEntries, getWinnerEntries, getSpinHistoryEntries } from "../lib/queries.js";
 import { determineOutcome, generateReelSymbols } from "./spinLogic.js";
 import type { SpinOutcome } from "./spinLogic.js";
 import type { SpinResultEvent } from "@shared/types";
@@ -91,8 +91,12 @@ class QueueProcessor {
     }
   }
 
-  private broadcastResult(data: SpinResultEvent): void {
+  private async broadcastResult(data: SpinResultEvent): Promise<void> {
     wsBroadcaster.broadcast({ type: "spin:result", data });
+    wsBroadcaster.broadcast({
+      type: "spins:update",
+      data: await getSpinHistoryEntries(),
+    });
   }
 
   private async processSpin(spinId: number): Promise<void> {
@@ -116,7 +120,7 @@ class QueueProcessor {
       const reelSymbols = generateReelSymbols("LOSE");
       await prisma.spinTransaction.update({
         where: { id: spinId },
-        data: { result: "LOSE" },
+        data: { result: "LOSE", reelSymbols: reelSymbols.join(",") },
       });
       console.log(`Spin #${spinId}: LOSE (insufficient tokens)`);
 
@@ -152,6 +156,7 @@ class QueueProcessor {
         where: { id: spinId },
         data: {
           result: "WIN",
+          reelSymbols: reelSymbols.join(","),
           rewardLamports,
           txSignature,
           reward: {
@@ -204,7 +209,7 @@ class QueueProcessor {
         const loseSymbols = generateReelSymbols("LOSE");
         await prisma.spinTransaction.update({
           where: { id: spinId },
-          data: { result: "LOSE" },
+          data: { result: "LOSE", reelSymbols: loseSymbols.join(",") },
         });
 
         this.broadcastResult({
@@ -232,6 +237,7 @@ class QueueProcessor {
         where: { id: spinId },
         data: {
           result: "REFUND",
+          reelSymbols: reelSymbols.join(","),
           refundLamports,
           refundTxSignature: txSignature,
         },
@@ -259,7 +265,7 @@ class QueueProcessor {
       // LOSE
       await prisma.spinTransaction.update({
         where: { id: spinId },
-        data: { result: "LOSE" },
+        data: { result: "LOSE", reelSymbols: reelSymbols.join(",") },
       });
       console.log(`Spin #${spinId}: LOSE`);
 

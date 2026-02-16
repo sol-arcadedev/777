@@ -135,6 +135,15 @@ export interface WinnerHistoryEntry {
   createdAt: string;
 }
 
+// ─── Spin History ────────────────────────────────────────
+
+export interface SpinHistoryEntry {
+  holderAddress: string;
+  result: SpinResult;
+  reelSymbols: [ReelSymbol, ReelSymbol, ReelSymbol];
+  createdAt: string;
+}
+
 // ─── Queue Display ───────────────────────────────────────
 
 export interface QueueEntry {
@@ -177,7 +186,8 @@ export type WsServerMessage =
   | { type: "config:update"; data: ConfigurationDTO }
   | { type: "spin:result"; data: SpinResultEvent }
   | { type: "reward:balance"; data: { balanceSol: number } }
-  | { type: "burn:update"; data: BurnStatsDTO };
+  | { type: "burn:update"; data: BurnStatsDTO }
+  | { type: "spins:update"; data: SpinHistoryEntry[] };
 
 // ─── Admin Config Update Request ─────────────────────────
 

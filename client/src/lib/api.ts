@@ -6,6 +6,7 @@ import type {
   UpdateConfigRequest,
   SystemStatus,
   BurnStatsDTO,
+  SpinHistoryEntry,
 } from "@shared/types";
 
 const ADMIN_TOKEN_KEY = "admin_token";
@@ -115,6 +116,10 @@ export function getSystemStatus() {
   return fetchJSON<SystemStatus>(`${API_BASE}/admin/system-status`, {
     headers: authHeaders(),
   });
+}
+
+export function getSpinHistory() {
+  return fetchJSON<SpinHistoryEntry[]>(`${API_BASE}/spin-history`);
 }
 
 export function getBurnStats() {

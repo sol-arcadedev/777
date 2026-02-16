@@ -3,11 +3,11 @@ import { useConfig } from "./hooks/useConfig";
 import { useQueue } from "./hooks/useQueue";
 import { useWinners } from "./hooks/useWinners";
 import { useWebSocket } from "./hooks/useWebSocket";
-import { getRewardBalance } from "./lib/api";
+import { getRewardBalance, getSpinHistory } from "./lib/api";
 import Layout from "./components/Layout";
 import AdminPanel from "./components/admin/AdminPanel";
 import NotificationToast from "./components/NotificationToast";
-import type { SpinResultEvent, WsServerMessage, BurnStatsDTO } from "@shared/types";
+import type { SpinResultEvent, WsServerMessage, BurnStatsDTO, SpinHistoryEntry } from "@shared/types";
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash);
@@ -29,11 +29,15 @@ function App() {
   const [rewardBalance, setRewardBalance] = useState<number | null>(null);
   const [spinResult, setSpinResult] = useState<SpinResultEvent | null>(null);
   const [burnUpdate, setBurnUpdate] = useState<BurnStatsDTO | null>(null);
+  const [spinHistory, setSpinHistory] = useState<SpinHistoryEntry[]>([]);
 
-  // Fetch initial reward balance
+  // Fetch initial reward balance + spin history
   useEffect(() => {
     getRewardBalance()
       .then((data) => setRewardBalance(data.balanceSol))
+      .catch(() => {});
+    getSpinHistory()
+      .then(setSpinHistory)
       .catch(() => {});
   }, []);
 
@@ -57,6 +61,9 @@ function App() {
           break;
         case "burn:update":
           setBurnUpdate(msg.data);
+          break;
+        case "spins:update":
+          setSpinHistory(msg.data);
           break;
       }
     },
@@ -88,6 +95,7 @@ function App() {
         spinResult={spinResult}
         onSpinResultDone={() => setSpinResult(null)}
         burnUpdate={burnUpdate}
+        spinHistory={spinHistory}
       />
       <NotificationToast newEntries={newEntries} onConsumed={clearNewEntries} />
     </>

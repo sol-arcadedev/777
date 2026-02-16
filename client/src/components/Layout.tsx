@@ -1,4 +1,4 @@
-import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO } from "@shared/types";
+import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO, SpinHistoryEntry } from "@shared/types";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
 import SlotDisplay from "./SlotDisplay";
@@ -8,6 +8,7 @@ import CountdownTimer from "./CountdownTimer";
 import BurnDisplay from "./BurnDisplay";
 import QueueDisplay from "./QueueDisplay";
 import WinnerHistory from "./WinnerHistory";
+import SpinHistory from "./SpinHistory";
 import Rules from "./Rules";
 
 interface LayoutProps {
@@ -19,9 +20,10 @@ interface LayoutProps {
   spinResult: SpinResultEvent | null;
   onSpinResultDone: () => void;
   burnUpdate: BurnStatsDTO | null;
+  spinHistory: SpinHistoryEntry[];
 }
 
-export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate }: LayoutProps) {
+export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate, spinHistory }: LayoutProps) {
   const isSpinning = activeSpin !== null;
 
   return (
@@ -100,6 +102,8 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
           <SlotDisplay activeSpin={activeSpin} />
 
           <QueueDisplay waiting={waiting} />
+
+          <SpinHistory spins={spinHistory} />
         </div>
 
         {/* Right column: Winner History + Operational Info — centered */}

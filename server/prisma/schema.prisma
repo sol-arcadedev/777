@@ -39,6 +39,7 @@ model SpinTransaction {
   winChance      Float
   queuePosition  Int
   result              SpinResult
+  reelSymbols         String?
   incomingTxSignature String?
   rewardLamports      BigInt?
   txSignature       String?
