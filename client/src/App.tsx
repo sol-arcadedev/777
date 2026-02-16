@@ -7,7 +7,7 @@ import { getRewardBalance, getSpinHistory } from "./lib/api";
 import Layout from "./components/Layout";
 import AdminPanel from "./components/admin/AdminPanel";
 import NotificationToast from "./components/NotificationToast";
-import type { SpinResultEvent, WsServerMessage, BurnStatsDTO, SpinHistoryEntry, WinnerHistoryEntry } from "@shared/types";
+import type { SpinResultEvent, WsServerMessage, BurnStatsDTO, SpinHistoryEntry, WinnerHistoryEntry, QueueEntry } from "@shared/types";
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash);
@@ -34,6 +34,7 @@ function App() {
   // Queue updates that should only appear after the spin animation finishes
   const pendingSpinsRef = useRef<SpinHistoryEntry[] | null>(null);
   const pendingWinnersRef = useRef<WinnerHistoryEntry[] | null>(null);
+  const pendingQueueRef = useRef<QueueEntry[] | null>(null);
   const spinResultRef = useRef<SpinResultEvent | null>(null);
   spinResultRef.current = spinResult;
 
@@ -51,7 +52,12 @@ function App() {
     (msg: WsServerMessage) => {
       switch (msg.type) {
         case "queue:update":
-          applyQueue(msg.data);
+          // Defer if animation is playing
+          if (spinResultRef.current) {
+            pendingQueueRef.current = msg.data;
+          } else {
+            applyQueue(msg.data);
+          }
           break;
         case "winners:update":
           // Defer if animation is playing
@@ -93,6 +99,10 @@ function App() {
     setSpinResult(null);
 
     // Flush any deferred updates
+    if (pendingQueueRef.current) {
+      applyQueue(pendingQueueRef.current);
+      pendingQueueRef.current = null;
+    }
     if (pendingSpinsRef.current) {
       setSpinHistory(pendingSpinsRef.current);
       pendingSpinsRef.current = null;
@@ -101,7 +111,7 @@ function App() {
       applyWinners(pendingWinnersRef.current);
       pendingWinnersRef.current = null;
     }
-  }, [applyWinners]);
+  }, [applyQueue, applyWinners]);
 
   if (!config) {
     return (
