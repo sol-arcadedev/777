@@ -110,10 +110,12 @@ function Reel({
 }) {
   return (
     <div
-      className="w-24 h-28 bg-casino-dark border-3 border-brass overflow-hidden flex items-center justify-center scanlines"
+      className="w-24 h-28 overflow-hidden flex items-center justify-center scanlines"
       style={{
+        background: "linear-gradient(180deg, #0a0a0a 0%, #111 50%, #0a0a0a 100%)",
+        border: "3px solid #8b7340",
         boxShadow:
-          "inset 0 2px 8px rgba(0,0,0,0.6), 2px 2px 0 rgba(0,0,0,0.4)",
+          "inset 0 2px 8px rgba(0,0,0,0.8), inset 0 -2px 8px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4)",
       }}
     >
       {state === "spinning" ? (
@@ -138,7 +140,7 @@ function Reel({
 
 function Lever({ pulling }: { pulling: boolean }) {
   return (
-    <div className="flex flex-col items-center ml-3" style={{ width: "28px" }}>
+    <div className="flex flex-col items-center ml-4" style={{ width: "32px" }}>
       <div
         className={pulling ? "animate-lever-pull" : ""}
         style={{
@@ -150,36 +152,59 @@ function Lever({ pulling }: { pulling: boolean }) {
       >
         {/* Knob */}
         <div
-          className="bg-lose-red border-2 border-maroon"
           style={{
-            width: "20px",
-            height: "20px",
+            width: "22px",
+            height: "22px",
             borderRadius: "50%",
+            background: "radial-gradient(circle at 35% 35%, #ff4444, #8b0000)",
+            border: "3px solid #600",
             boxShadow:
-              "inset -2px -2px 0 rgba(0,0,0,0.3), 2px 2px 0 rgba(0,0,0,0.3)",
+              "inset -2px -2px 0 rgba(0,0,0,0.4), 2px 2px 0 rgba(0,0,0,0.4), 0 0 6px rgba(255,0,0,0.3)",
           }}
         />
         {/* Shaft */}
         <div
-          className="bg-gold-dim"
           style={{
-            width: "6px",
-            height: "60px",
+            width: "8px",
+            height: "65px",
+            background: "linear-gradient(90deg, #b5a642 0%, #daa520 40%, #b5a642 100%)",
             boxShadow:
-              "1px 0 0 rgba(0,0,0,0.3), -1px 0 0 rgba(255,255,255,0.1)",
+              "2px 0 0 rgba(0,0,0,0.3), -1px 0 0 rgba(255,255,255,0.15)",
           }}
         />
       </div>
       {/* Pivot base */}
       <div
-        className="bg-brass"
         style={{
-          width: "16px",
-          height: "8px",
-          borderRadius: "0 0 4px 4px",
-          boxShadow: "2px 2px 0 rgba(0,0,0,0.3)",
+          width: "20px",
+          height: "10px",
+          borderRadius: "0 0 6px 6px",
+          background: "linear-gradient(180deg, #b5a642, #8b7340)",
+          boxShadow: "2px 2px 0 rgba(0,0,0,0.4)",
         }}
       />
+    </div>
+  );
+}
+
+/** Decorative light bulbs row */
+function LightBulbs({ count, spinning }: { count: number; spinning: boolean }) {
+  return (
+    <div className="flex justify-center gap-1.5">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className={spinning ? "slot-bulb-spinning" : "slot-bulb-idle"}
+          style={{
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            background: i % 2 === 0 ? "#ffd700" : "#ff4444",
+            border: "1px solid rgba(0,0,0,0.4)",
+            animationDelay: `${i * 0.15}s`,
+          }}
+        />
+      ))}
     </div>
   );
 }
@@ -190,7 +215,7 @@ function ConfettiParticle({ index }: { index: number }) {
   const left = Math.random() * 100;
   const delay = Math.random() * 0.5;
   const duration = 1.5 + Math.random();
-  const size = 6 + Math.random() * 6; // 6px-12px varied sizes
+  const size = 6 + Math.random() * 6;
 
   return (
     <div
@@ -228,14 +253,12 @@ export default function SlotMachine({
   const staggerTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const spinStartRef = useRef<number>(0);
 
-  // Generate random strips for spinning animation (regenerate each spin)
   const strips = useMemo(
     () => [generateStrip(), generateStrip(), generateStrip()],
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [phase === "spinning"],
   );
 
-  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -245,7 +268,6 @@ export default function SlotMachine({
 
   useEffect(() => {
     if (spinResult) {
-      // Enforce minimum spin duration before stopping reels
       const elapsed = Date.now() - spinStartRef.current;
       const remaining = Math.max(0, MIN_SPIN_MS - elapsed);
 
@@ -253,15 +275,12 @@ export default function SlotMachine({
         setPhase("stopping");
         setDisplayResult(spinResult);
 
-        // Stop left reel first
         setReelStates(["stopped", "spinning", "spinning"]);
 
-        // Stop middle reel after delay
         const t1 = setTimeout(() => {
           setReelStates(["stopped", "stopped", "spinning"]);
         }, STAGGER_DELAY_MS);
 
-        // Stop right reel after another delay, then show result
         const t2 = setTimeout(() => {
           setReelStates(["stopped", "stopped", "stopped"]);
           setPhase("result");
@@ -269,7 +288,6 @@ export default function SlotMachine({
 
         staggerTimers.current = [t1, t2];
 
-        // Auto-dismiss result after display period
         timerRef.current = setTimeout(() => {
           setPhase("idle");
           setDisplayResult(null);
@@ -308,6 +326,7 @@ export default function SlotMachine({
   const isLose = displayResult?.result === "LOSE";
   const showingResult =
     (phase === "result" || phase === "stopping") && displayResult !== null;
+  const isSpinPhase = phase === "spinning";
 
   const finalSymbols: [ReelSymbol, ReelSymbol, ReelSymbol] =
     displayResult?.reelSymbols ?? ["7", "7", "7"];
@@ -326,16 +345,12 @@ export default function SlotMachine({
 
   const containerClass = [
     "relative overflow-hidden",
-    phase === "spinning" && "animate-spin-glow",
     showingResult && isWin && "win-glow",
     showingResult && isRefund && "refund-glow",
     showingResult && isLose && "lose-flash",
   ]
     .filter(Boolean)
     .join(" ");
-
-  // Cabinet border color changes during spinning
-  const cabinetBorderColor = phase === "spinning" ? "#00ff41" : "#daa520";
 
   return (
     <div className={containerClass}>
@@ -350,7 +365,7 @@ export default function SlotMachine({
         />
       )}
 
-      {/* Confetti overlay for wins — 30 particles */}
+      {/* Confetti overlay for wins */}
       {showingResult && isWin && (
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
           {Array.from({ length: 30 }).map((_, i) => (
@@ -359,100 +374,255 @@ export default function SlotMachine({
         </div>
       )}
 
-      {/* Slot Machine Cabinet */}
+      {/* === SLOT MACHINE CABINET === */}
       <div
         className="flex flex-col items-center"
         style={{
-          background:
-            "linear-gradient(180deg, #5c0000 0%, #8b0000 30%, #6b0000 100%)",
-          border: `4px solid ${cabinetBorderColor}`,
-          boxShadow: phase === "spinning"
-            ? "0 0 20px #00ff41, 0 0 40px rgba(0,255,65,0.3), 4px 4px 0 rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3)"
-            : "4px 4px 0 rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.3), 0 0 12px rgba(218,165,32,0.3)",
-          padding: "12px 16px",
-          minWidth: "360px",
-          transition: "border-color 0.3s, box-shadow 0.3s",
+          minWidth: "400px",
         }}
       >
-        {/* Top Marquee */}
-        <div className="text-center mb-3">
-          <div className="text-2xl text-gold animate-marquee-glow font-bold tracking-wider">
-            777
-          </div>
-          <div className="text-[8px] uppercase tracking-widest text-gold-dim mt-1">
-            {marqueeText}
-          </div>
-        </div>
-
-        {/* Reel area + Lever */}
-        <div className="flex items-center">
-          {/* Reel Window */}
+        {/* ─── Cabinet Top Crown ─── */}
+        <div
+          style={{
+            width: "100%",
+            background: "linear-gradient(180deg, #daa520 0%, #b5a642 50%, #8b7340 100%)",
+            border: "3px solid #daa520",
+            borderBottom: "none",
+            borderRadius: "12px 12px 0 0",
+            padding: "6px 0 4px",
+            boxShadow: "0 -2px 8px rgba(218,165,32,0.3), inset 0 2px 0 rgba(255,255,255,0.2)",
+          }}
+        >
           <div
-            className="flex gap-2 p-3"
+            className="text-center font-bold tracking-widest"
             style={{
-              background: "#0a0a0a",
-              border: "3px solid #b5a642",
-              boxShadow:
-                "inset 0 4px 12px rgba(0,0,0,0.8), 2px 2px 0 rgba(0,0,0,0.4)",
+              fontSize: "10px",
+              color: "#1a0f00",
+              textShadow: "0 1px 0 rgba(255,255,255,0.3)",
             }}
           >
-            <Reel
-              state={reelStates[0]}
-              finalSymbol={finalSymbols[0]}
-              strip={strips[0]}
-            />
-            <Reel
-              state={reelStates[1]}
-              finalSymbol={finalSymbols[1]}
-              strip={strips[1]}
-            />
-            <Reel
-              state={reelStates[2]}
-              finalSymbol={finalSymbols[2]}
-              strip={strips[2]}
-            />
+            THE CREATOR FEE SLOT
           </div>
-
-          {/* Side Lever */}
-          <Lever pulling={leverPull} />
         </div>
 
-        {/* Result Display */}
-        <div className="mt-3 text-center min-h-[28px]">
-          {showingResult &&
-            isWin &&
-            displayResult.rewardSol !== null && (
-              <div className="text-win-green text-base font-bold animate-bounce-in animate-win-amount-pulse">
-                +{displayResult.rewardSol.toFixed(4)} SOL
+        {/* ─── Top Light Bulbs ─── */}
+        <div
+          style={{
+            width: "100%",
+            background: "linear-gradient(180deg, #5c0000, #8b0000 20%)",
+            borderLeft: "3px solid #daa520",
+            borderRight: "3px solid #daa520",
+            padding: "6px 12px",
+          }}
+        >
+          <LightBulbs count={18} spinning={isSpinPhase} />
+        </div>
+
+        {/* ─── Main Cabinet Body ─── */}
+        <div
+          style={{
+            width: "100%",
+            background:
+              "linear-gradient(180deg, #8b0000 0%, #6b0000 40%, #4a0000 100%)",
+            borderLeft: "3px solid #daa520",
+            borderRight: "3px solid #daa520",
+            padding: "4px 16px 12px",
+            boxShadow: "inset 0 0 30px rgba(0,0,0,0.3)",
+          }}
+        >
+          {/* Marquee Display */}
+          <div
+            className="text-center mb-2 py-2"
+            style={{
+              background: "linear-gradient(180deg, #0a0a0a, #111, #0a0a0a)",
+              border: "3px solid #8b7340",
+              boxShadow: "inset 0 0 12px rgba(0,0,0,0.8), 0 0 6px rgba(218,165,32,0.15)",
+            }}
+          >
+            <div className="text-3xl text-gold animate-marquee-glow font-bold tracking-wider">
+              777
+            </div>
+            <div
+              className="text-[8px] uppercase tracking-widest mt-0.5"
+              style={{
+                color: showingResult && isWin ? "#00ff41" : showingResult && isLose ? "#ff2020" : "#daa520",
+              }}
+            >
+              {marqueeText}
+            </div>
+          </div>
+
+          {/* Decorative rivets row */}
+          <div className="flex justify-between px-2 mb-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 35% 35%, #daa520, #8b7340)",
+                  border: "1px solid #6b5a30",
+                  boxShadow: "inset -1px -1px 0 rgba(0,0,0,0.3), 1px 1px 0 rgba(0,0,0,0.2)",
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Reel area + Lever */}
+          <div className="flex items-center justify-center">
+            {/* Reel Window Frame */}
+            <div
+              style={{
+                background: "linear-gradient(180deg, #8b7340, #b5a642, #8b7340)",
+                padding: "4px",
+                boxShadow: "3px 3px 0 rgba(0,0,0,0.5), 0 0 8px rgba(218,165,32,0.2)",
+              }}
+            >
+              <div
+                className="flex gap-1.5 p-2.5"
+                style={{
+                  background: "#050505",
+                  boxShadow: "inset 0 4px 16px rgba(0,0,0,0.9), inset 0 -4px 16px rgba(0,0,0,0.9)",
+                }}
+              >
+                <Reel
+                  state={reelStates[0]}
+                  finalSymbol={finalSymbols[0]}
+                  strip={strips[0]}
+                />
+                {/* Separator */}
+                <div style={{ width: "2px", background: "#8b7340", boxShadow: "0 0 2px rgba(218,165,32,0.3)" }} />
+                <Reel
+                  state={reelStates[1]}
+                  finalSymbol={finalSymbols[1]}
+                  strip={strips[1]}
+                />
+                <div style={{ width: "2px", background: "#8b7340", boxShadow: "0 0 2px rgba(218,165,32,0.3)" }} />
+                <Reel
+                  state={reelStates[2]}
+                  finalSymbol={finalSymbols[2]}
+                  strip={strips[2]}
+                />
+              </div>
+            </div>
+
+            {/* Side Lever */}
+            <Lever pulling={leverPull} />
+          </div>
+
+          {/* Decorative rivets row */}
+          <div className="flex justify-between px-2 mt-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div
+                key={i}
+                style={{
+                  width: "8px",
+                  height: "8px",
+                  borderRadius: "50%",
+                  background: "radial-gradient(circle at 35% 35%, #daa520, #8b7340)",
+                  border: "1px solid #6b5a30",
+                  boxShadow: "inset -1px -1px 0 rgba(0,0,0,0.3), 1px 1px 0 rgba(0,0,0,0.2)",
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* ─── Bottom Light Bulbs ─── */}
+        <div
+          style={{
+            width: "100%",
+            background: "linear-gradient(180deg, #4a0000 80%, #3a0000)",
+            borderLeft: "3px solid #daa520",
+            borderRight: "3px solid #daa520",
+            padding: "6px 12px",
+          }}
+        >
+          <LightBulbs count={18} spinning={isSpinPhase} />
+        </div>
+
+        {/* ─── Payout / Result Tray ─── */}
+        <div
+          style={{
+            width: "100%",
+            background: "linear-gradient(180deg, #3a0000 0%, #2a0000 100%)",
+            borderLeft: "3px solid #daa520",
+            borderRight: "3px solid #daa520",
+            padding: "8px 16px",
+          }}
+        >
+          <div
+            className="text-center min-h-[28px]"
+            style={{
+              background: "rgba(0,0,0,0.4)",
+              border: "2px solid #8b7340",
+              padding: "4px",
+              boxShadow: "inset 0 2px 6px rgba(0,0,0,0.6)",
+            }}
+          >
+            {showingResult &&
+              isWin &&
+              displayResult.rewardSol !== null && (
+                <div className="text-win-green text-base font-bold animate-bounce-in animate-win-amount-pulse">
+                  +{displayResult.rewardSol.toFixed(4)} SOL
+                </div>
+              )}
+
+            {showingResult && isRefund && displayResult.refundSol !== null && (
+              <div
+                className="text-base font-bold animate-bounce-in"
+                style={{ color: "#14F195" }}
+              >
+                REFUND! +{displayResult.refundSol.toFixed(4)} SOL
               </div>
             )}
 
-          {showingResult && isRefund && displayResult.refundSol !== null && (
+            {showingResult && isLose && (
+              <div className="text-lose-red text-[9px] animate-bounce-in">
+                BETTER LUCK NEXT TIME
+              </div>
+            )}
+
+            {paused && !showingResult && (
+              <div className="text-[8px] text-gold-dim">
+                MACHINE PAUSED - SPINS QUEUED
+              </div>
+            )}
+
+            {!showingResult && !paused && phase === "idle" && (
+              <div className="text-[7px] text-gold-dim/70">
+                SEND {minSolTransfer}+ SOL TO SPIN
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ─── Coin Slot / Base ─── */}
+        <div
+          style={{
+            width: "100%",
+            background: "linear-gradient(180deg, #2a0000, #1a0000)",
+            border: "3px solid #daa520",
+            borderTop: "none",
+            borderRadius: "0 0 8px 8px",
+            padding: "6px 0",
+            boxShadow: "0 4px 8px rgba(0,0,0,0.6), inset 0 -2px 0 rgba(255,255,255,0.05)",
+          }}
+        >
+          {/* Coin slot */}
+          <div className="flex justify-center">
             <div
-              className="text-base font-bold animate-bounce-in"
-              style={{ color: "#14F195" }}
-            >
-              REFUND! +{displayResult.refundSol.toFixed(4)} SOL
-            </div>
-          )}
-
-          {showingResult && isLose && (
-            <div className="text-lose-red text-[9px] animate-bounce-in">
-              BETTER LUCK NEXT TIME
-            </div>
-          )}
-
-          {paused && !showingResult && (
-            <div className="text-[8px] text-gold-dim border border-gold-dim/30 px-3 py-1">
-              MACHINE PAUSED - SPINS QUEUED
-            </div>
-          )}
-
-          {!showingResult && !paused && phase === "idle" && (
-            <div className="text-[7px] text-gold-dim/70 max-w-[260px]">
-              SEND {minSolTransfer}+ SOL TO SPIN
-            </div>
-          )}
+              style={{
+                width: "40px",
+                height: "6px",
+                background: "#0a0a0a",
+                border: "2px solid #8b7340",
+                borderRadius: "3px",
+                boxShadow: "inset 0 1px 3px rgba(0,0,0,0.8)",
+              }}
+            />
+          </div>
         </div>
       </div>
     </div>

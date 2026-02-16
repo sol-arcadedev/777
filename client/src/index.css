@@ -535,6 +535,28 @@ body {
   background: var(--color-gold);
 }
 
+/* Slot machine light bulbs — idle chase */
+@keyframes bulb-chase {
+  0%, 40% { opacity: 0.3; box-shadow: none; }
+  50% { opacity: 1; box-shadow: 0 0 4px currentColor; }
+  60%, 100% { opacity: 0.3; box-shadow: none; }
+}
+
+/* Slot machine light bulbs — spinning fast chase */
+@keyframes bulb-spin-chase {
+  0%, 30% { opacity: 0.4; box-shadow: none; }
+  50% { opacity: 1; box-shadow: 0 0 6px currentColor, 0 0 10px currentColor; }
+  70%, 100% { opacity: 0.4; box-shadow: none; }
+}
+
+.slot-bulb-idle {
+  animation: bulb-chase 2s steps(2) infinite;
+}
+
+.slot-bulb-spinning {
+  animation: bulb-spin-chase 0.4s steps(2) infinite;
+}
+
 /* Interactive hover states */
 button:not(:disabled):hover, a:hover {
   filter: brightness(1.1);

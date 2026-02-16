@@ -67,7 +67,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="SEARCH ADDRESS..."
-            className="bg-casino-dark border border-gold-dim/40 px-2 py-0.5 text-[7px] text-cream placeholder:text-gold-dim/30 focus:border-gold focus:outline-none w-32"
+            className="bg-casino-dark border-2 border-gold-dim/40 px-3 py-1.5 text-[9px] text-cream placeholder:text-gold-dim/30 focus:border-gold focus:outline-none w-44"
           />
         )}
       </div>
