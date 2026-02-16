@@ -1,9 +1,31 @@
 import { useState } from "react";
-import { formatAddress } from "../lib/utils";
+import { formatAddress, copyToClipboard } from "../lib/utils";
 import type { QueueEntry } from "@shared/types";
 
 interface QueueDisplayProps {
   waiting: QueueEntry[];
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className="text-[6px] text-gold-dim/60 hover:text-gold cursor-pointer ml-1 shrink-0"
+      title="Copy address"
+    >
+      {copied ? "OK" : "COPY"}
+    </button>
+  );
 }
 
 export default function QueueDisplay({ waiting }: QueueDisplayProps) {
@@ -58,7 +80,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
             return (
               <div
                 key={`${entry.holderAddress}-${entry.queuePosition}`}
-                className="flex items-center justify-between text-[7px] px-2 py-1.5 animate-slide-in-left"
+                className="flex items-center text-[7px] px-2 py-1.5 animate-slide-in-left"
                 style={{
                   background: isSearchHit
                     ? "#3d2a00"
@@ -75,11 +97,19 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
                   boxShadow: isNext ? "0 0 4px rgba(0,255,65,0.2)" : "none",
                 }}
               >
-                <span className="text-gold font-bold w-8">
+                <span className="text-gold font-bold w-8 shrink-0">
                   {isNext && !isSearchHit ? "NEXT" : `#${position}`}
                 </span>
-                <span className="text-cream flex-1 ml-1">{formatAddress(entry.holderAddress)}</span>
-                <span className="text-cream ml-2">{entry.solTransferred} SOL</span>
+                <a
+                  href={`https://solscan.io/account/${entry.holderAddress}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cream hover:text-gold transition-colors ml-1"
+                  title="View on Solscan"
+                >
+                  {formatAddress(entry.holderAddress)}
+                </a>
+                <CopyButton text={entry.holderAddress} />
               </div>
             );
           })}
