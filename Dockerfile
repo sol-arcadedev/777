@@ -36,7 +36,6 @@ RUN npm ci --omit=dev --ignore-scripts
 
 # Copy built output and prisma
 COPY --from=base /app/server/dist server/dist
-COPY --from=base /app/server/node_modules/.prisma server/node_modules/.prisma
 COPY --from=base /app/node_modules/.prisma node_modules/.prisma
 COPY --from=base /app/node_modules/@prisma node_modules/@prisma
 COPY server/prisma server/prisma
