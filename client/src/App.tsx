@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useConfig } from "./hooks/useConfig";
 import { useQueue } from "./hooks/useQueue";
 import { useWinners } from "./hooks/useWinners";
@@ -7,7 +7,7 @@ import { getRewardBalance, getSpinHistory } from "./lib/api";
 import Layout from "./components/Layout";
 import AdminPanel from "./components/admin/AdminPanel";
 import NotificationToast from "./components/NotificationToast";
-import type { SpinResultEvent, WsServerMessage, BurnStatsDTO, SpinHistoryEntry } from "@shared/types";
+import type { SpinResultEvent, WsServerMessage, BurnStatsDTO, SpinHistoryEntry, WinnerHistoryEntry } from "@shared/types";
 
 function useHashRoute() {
   const [hash, setHash] = useState(window.location.hash);
@@ -31,6 +31,12 @@ function App() {
   const [burnUpdate, setBurnUpdate] = useState<BurnStatsDTO | null>(null);
   const [spinHistory, setSpinHistory] = useState<SpinHistoryEntry[]>([]);
 
+  // Queue updates that should only appear after the spin animation finishes
+  const pendingSpinsRef = useRef<SpinHistoryEntry[] | null>(null);
+  const pendingWinnersRef = useRef<WinnerHistoryEntry[] | null>(null);
+  const spinResultRef = useRef<SpinResultEvent | null>(null);
+  spinResultRef.current = spinResult;
+
   // Fetch initial reward balance + spin history
   useEffect(() => {
     getRewardBalance()
@@ -48,7 +54,12 @@ function App() {
           applyQueue(msg.data);
           break;
         case "winners:update":
-          applyWinners(msg.data);
+          // Defer if animation is playing
+          if (spinResultRef.current) {
+            pendingWinnersRef.current = msg.data;
+          } else {
+            applyWinners(msg.data);
+          }
           break;
         case "config:update":
           applyConfig(msg.data);
@@ -63,7 +74,12 @@ function App() {
           setBurnUpdate(msg.data);
           break;
         case "spins:update":
-          setSpinHistory(msg.data);
+          // Defer if animation is playing
+          if (spinResultRef.current) {
+            pendingSpinsRef.current = msg.data;
+          } else {
+            setSpinHistory(msg.data);
+          }
           break;
       }
     },
@@ -71,6 +87,21 @@ function App() {
   );
 
   useWebSocket(onWsMessage);
+
+  // Called when the spin animation fully completes (reels stopped + result displayed)
+  const handleSpinResultDone = useCallback(() => {
+    setSpinResult(null);
+
+    // Flush any deferred updates
+    if (pendingSpinsRef.current) {
+      setSpinHistory(pendingSpinsRef.current);
+      pendingSpinsRef.current = null;
+    }
+    if (pendingWinnersRef.current) {
+      applyWinners(pendingWinnersRef.current);
+      pendingWinnersRef.current = null;
+    }
+  }, [applyWinners]);
 
   if (!config) {
     return (
@@ -93,7 +124,7 @@ function App() {
         winners={winners}
         rewardBalance={rewardBalance}
         spinResult={spinResult}
-        onSpinResultDone={() => setSpinResult(null)}
+        onSpinResultDone={handleSpinResultDone}
         burnUpdate={burnUpdate}
         spinHistory={spinHistory}
       />
