@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO, SpinHistoryEntry } from "@shared/types";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
@@ -23,6 +24,29 @@ interface LayoutProps {
 
 export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate, spinHistory }: LayoutProps) {
   const isSpinning = activeSpin !== null;
+  const bgMusicRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    const audio = new Audio("/sfx/Background_Music.mp3");
+    audio.loop = true;
+    audio.volume = 0.15;
+    bgMusicRef.current = audio;
+
+    const startMusic = () => {
+      audio.play().catch(() => {});
+      document.removeEventListener("click", startMusic);
+      document.removeEventListener("keydown", startMusic);
+    };
+
+    document.addEventListener("click", startMusic);
+    document.addEventListener("keydown", startMusic);
+
+    return () => {
+      audio.pause();
+      document.removeEventListener("click", startMusic);
+      document.removeEventListener("keydown", startMusic);
+    };
+  }, []);
 
   return (
     <div
