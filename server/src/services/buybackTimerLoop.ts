@@ -10,6 +10,7 @@ import { wsBroadcaster } from "./wsServer.js";
 import { getBurnStats } from "../lib/queries.js";
 
 const CHECK_INTERVAL_MS = 5_000;
+const DEV_MODE = process.env.DEV_MODE === "true";
 
 let intervalId: ReturnType<typeof setInterval> | null = null;
 
@@ -22,6 +23,21 @@ async function checkTimer(): Promise<void> {
     if (!config || !config.timerExpiresAt) return;
 
     if (config.timerExpiresAt.getTime() > Date.now()) return;
+
+    if (DEV_MODE) {
+      console.log("[DEV_MODE] Buyback timer expired, skipping on-chain transfers");
+      // Reset timer even in dev mode
+      await prisma.configuration.update({
+        where: { id: 1 },
+        data: {
+          timerExpiresAt: new Date(
+            Date.now() + config.timerDurationSec * 1000,
+          ),
+        },
+      });
+      console.log(`Buyback timer: reset for ${config.timerDurationSec}s`);
+      return;
+    }
 
     // Timer expired — trigger Verification → Creator (80%) + Reward (20%)
     const balance = await getVerificationWalletBalance();
