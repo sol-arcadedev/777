@@ -41,11 +41,13 @@ function CopyButton({ text }: { text: string }) {
 export default function QueueDisplay({ waiting }: QueueDisplayProps) {
   const [search, setSearch] = useState("");
 
+  const sorted = [...waiting].sort((a, b) => a.queuePosition - b.queuePosition);
+
   const filtered = search.trim()
-    ? waiting.filter((e) =>
+    ? sorted.filter((e) =>
         e.holderAddress.toLowerCase().includes(search.trim().toLowerCase()),
       )
-    : waiting;
+    : sorted;
 
   if (waiting.length === 0) {
     return (
@@ -96,7 +98,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
       ) : (
         <div className="space-y-1 max-h-40 overflow-y-auto">
           {filtered.map((entry, i) => {
-            const position = waiting.indexOf(entry) + 1;
+            const position = sorted.indexOf(entry) + 1;
             const isNext = position === 1;
             const isSearchHit = search.trim().length > 0;
 
