@@ -67,15 +67,6 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
 
       <Header tokenCA={config.tokenCA} expiresAt={config.timerExpiresAt} burnUpdate={burnUpdate} />
 
-      <div className="flex justify-center relative z-[1] -mb-2">
-        <img
-          src="/777_TokenImage.png"
-          alt="777 Token"
-          className="h-12 w-12 object-contain"
-          style={{ imageRendering: "pixelated" }}
-        />
-      </div>
-
       <main className="flex-1 grid grid-cols-[310px_1fr_310px] gap-4 p-4 max-w-[1920px] mx-auto w-full relative z-[1] min-h-0">
         {/* Left column: Rules + Queue */}
         <div className="flex flex-col gap-3 justify-start pt-4 min-h-0">
@@ -100,6 +91,14 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
               left: "50%",
               transform: "translate(-50%, -55%)",
             }}
+          />
+
+          {/* Token image */}
+          <img
+            src="/777_TokenImage.png"
+            alt="777 Token"
+            className="h-20 w-20 object-contain"
+            style={{ imageRendering: "auto" }}
           />
 
           {/* Spin-relevant info cards — above slot */}
