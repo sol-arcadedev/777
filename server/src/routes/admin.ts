@@ -8,6 +8,7 @@ import {
   transferToTreasury,
   getCreatorWalletBalance,
   buybackAndBurn,
+  claimCreatorFees,
 } from "../services/solana.js";
 import { adminAuth, createSession } from "../middleware/adminAuth.js";
 import { startFeeClaimLoop, stopFeeClaimLoop, isFeeClaimRunning } from "../services/feeClaimLoop.js";
@@ -156,27 +157,27 @@ router.post("/api/admin/trigger-buyback", adminAuth, async (_req, res) => {
   }
 });
 
-router.post("/api/admin/claim-fees", adminAuth, async (req, res) => {
+router.post("/api/admin/claim-fees", adminAuth, async (_req, res) => {
   try {
-    const { amount } = req.body as { amount?: number };
-    const claimAmount = (typeof amount === "number" && amount > 0) ? amount : 0.05;
+    // Claim creator fees on-chain (both bonding + pAMM)
+    const { tx: claimTx, totalClaimed } = await claimCreatorFees();
 
-    const creatorBal = await getCreatorWalletBalance();
-    if (creatorBal < claimAmount + 0.002) {
-      res.status(400).json({ error: `Creator wallet balance too low (${creatorBal.toFixed(4)} SOL)` });
+    if (totalClaimed <= 0) {
+      res.status(400).json({ error: "No fees to claim" });
       return;
     }
 
-    const treasuryAmount = claimAmount * 0.7;
-    const rewardAmount = claimAmount * 0.3;
+    // Distribute the claimed amount 70/30
+    const treasuryAmount = totalClaimed * 0.7;
+    const rewardAmount = totalClaimed * 0.3;
 
     await transferToTreasury(treasuryAmount);
     await transferToReward(rewardAmount);
 
     const feeClaim = await prisma.feeClaim.create({
       data: {
-        claimTxSignature: `admin-claim-${Date.now()}`,
-        totalClaimed: claimAmount,
+        claimTxSignature: claimTx || `admin-claim-${Date.now()}`,
+        totalClaimed,
         treasuryAmount,
         rewardAmount,
       },
@@ -188,10 +189,10 @@ router.post("/api/admin/claim-fees", adminAuth, async (req, res) => {
       data: { balanceSol: newBalance },
     });
 
-    console.log(`Admin fee claim: ${claimAmount} SOL → 70% Treasury (${treasuryAmount}), 30% Reward (${rewardAmount})`);
+    console.log(`Admin fee claim: ${totalClaimed.toFixed(4)} SOL → 70% Treasury (${treasuryAmount.toFixed(4)}), 30% Reward (${rewardAmount.toFixed(4)})`);
     res.json({
       id: feeClaim.id,
-      totalClaimed: claimAmount,
+      totalClaimed,
       treasuryAmount,
       rewardAmount,
       rewardWalletBalance: newBalance,
