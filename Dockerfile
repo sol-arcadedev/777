@@ -11,7 +11,8 @@ COPY client/package.json client/
 # Install all dependencies (needed for prisma generate)
 RUN npm ci --ignore-scripts
 
-# Copy source code
+# Copy source code and root tsconfig (server extends it)
+COPY tsconfig.json ./
 COPY shared/ shared/
 COPY server/ server/
 
