@@ -14,18 +14,15 @@ type ReelState = "spinning" | "stopped" | "initial";
 
 const MIN_SPIN_MS = 2000;
 const STAGGER_DELAY_MS = 600;
-const RESULT_DISPLAY_MS = 3500;
+const RESULT_DISPLAY_MS = 3000;
 const STRIP_LENGTH = 15;
 
 const ALL_SYMBOLS: ReelSymbol[] = ["7", "SOL", "X"];
 
 const winSfx = new Audio("/sfx/777_sfx.mp3");
 const refundSfx = new Audio("/sfx/SOLRefund_sfx.mp3");
-const spinSfx = new Audio("/sfx/ReelsSpinning.wav");
 winSfx.preload = "auto";
 refundSfx.preload = "auto";
-spinSfx.preload = "auto";
-spinSfx.loop = true;
 
 function randomSymbol(): ReelSymbol {
   return ALL_SYMBOLS[Math.floor(Math.random() * ALL_SYMBOLS.length)];
@@ -297,8 +294,6 @@ export default function SlotMachine({
       const stopReels = () => {
         setPhase("stopping");
         setDisplayResult(spinResult);
-        spinSfx.pause();
-        spinSfx.currentTime = 0;
 
         setReelStates(["stopped", "spinning", "spinning"]);
 
@@ -341,8 +336,6 @@ export default function SlotMachine({
       setPhase("spinning");
       setReelStates(["spinning", "spinning", "spinning"]);
       spinStartRef.current = Date.now();
-      spinSfx.currentTime = 0;
-      spinSfx.play().catch(() => {});
       setLeverPull(true);
       setTimeout(() => setLeverPull(false), 600);
     } else if (!spinResult && !isSpinning && phase !== "result" && phase !== "stopping") {

@@ -12,7 +12,7 @@ import {
 } from "./solana.js";
 import { wsBroadcaster } from "./wsServer.js";
 
-const PROCESS_INTERVAL_MS = 2000;
+const PROCESS_INTERVAL_MS = 7000;
 
 class QueueProcessor {
   private queue: number[] = [];
