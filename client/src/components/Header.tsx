@@ -34,9 +34,7 @@ export default function Header({ tokenCA, expiresAt, burnUpdate }: HeaderProps) 
       }}
     >
       <div className="flex items-center gap-4">
-        <h1 className="text-5xl font-bold tracking-wider text-shimmer animate-marquee-glow">
-          777
-        </h1>
+        <img src="/777_TokenImage.png" alt="777" className="h-12 w-12" style={{ imageRendering: "auto" }} />
         <div
           className="flex items-center gap-2 text-[12px] border-2 border-gold-dim px-3 py-1.5 text-cream"
           style={{
