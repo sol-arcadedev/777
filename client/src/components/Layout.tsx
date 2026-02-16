@@ -1,8 +1,9 @@
-import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO } from "@shared/types";
+import type { ConfigurationDTO, QueueEntry, WinnerHistoryEntry, SpinResultEvent, BurnStatsDTO, DynamicValues } from "@shared/types";
 import Header from "./Header";
 import SlotMachine from "./SlotMachine";
 import SlotDisplay from "./SlotDisplay";
 import RewardDisplay from "./RewardDisplay";
+import WinChanceDisplay from "./WinChanceDisplay";
 import CountdownTimer from "./CountdownTimer";
 import BurnDisplay from "./BurnDisplay";
 import QueueDisplay from "./QueueDisplay";
@@ -18,10 +19,15 @@ interface LayoutProps {
   spinResult: SpinResultEvent | null;
   onSpinResultDone: () => void;
   burnUpdate: BurnStatsDTO | null;
+  dynamicValues: DynamicValues | null;
 }
 
-export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate }: LayoutProps) {
+export default function Layout({ config, activeSpin, waiting, winners, rewardBalance, spinResult, onSpinResultDone, burnUpdate, dynamicValues }: LayoutProps) {
   const isSpinning = activeSpin !== null;
+  const winChance = dynamicValues?.winChance ?? config.winChanceStart;
+  const rewardPercent = dynamicValues?.rewardPercent ?? config.rewardPercentStart;
+  const cycleProgress = dynamicValues?.cycleProgress ?? 0;
+  const cycleSecondsLeft = dynamicValues?.cycleSecondsLeft ?? config.escalationDurationMin * 60;
 
   return (
     <div className="min-h-screen flex flex-col"
@@ -48,19 +54,18 @@ export default function Layout({ config, activeSpin, waiting, winners, rewardBal
             onResultDone={onSpinResultDone}
           />
           <SlotDisplay activeSpin={activeSpin} />
-          <div className="flex gap-3 w-full max-w-md">
-            <div className="flex-1">
-              <RewardDisplay
-                rewardPercent={config.rewardPercent}
-                balanceSol={rewardBalance}
-              />
-            </div>
-            <div className="flex-1">
-              <CountdownTimer expiresAt={config.timerExpiresAt} />
-            </div>
-            <div className="flex-1">
-              <BurnDisplay burnUpdate={burnUpdate} />
-            </div>
+          <div className="grid grid-cols-4 gap-2 w-full max-w-lg">
+            <WinChanceDisplay
+              winChance={winChance}
+              cycleSecondsLeft={cycleSecondsLeft}
+            />
+            <RewardDisplay
+              rewardPercent={rewardPercent}
+              balanceSol={rewardBalance}
+              cycleProgress={cycleProgress}
+            />
+            <CountdownTimer expiresAt={config.timerExpiresAt} />
+            <BurnDisplay burnUpdate={burnUpdate} />
           </div>
         </div>
 

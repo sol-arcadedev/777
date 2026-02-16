@@ -11,7 +11,6 @@ export async function getQueueEntries(): Promise<QueueEntry[]> {
   return pending.map((s) => ({
     holderAddress: s.holderAddress,
     solTransferred: s.solTransferred,
-    winChance: s.winChance,
     queuePosition: s.queuePosition,
   }));
 }

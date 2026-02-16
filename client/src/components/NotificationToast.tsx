@@ -48,7 +48,7 @@ export default function NotificationToast({ newEntries, onConsumed }: Notificati
           {current.holderAddress.slice(0, 4)}...{current.holderAddress.slice(-4)}
         </div>
         <div className="text-[7px] text-gold-dim mt-1">
-          {current.solTransferred} SOL | {current.winChance}%
+          {current.solTransferred} SOL
         </div>
       </div>
     </div>

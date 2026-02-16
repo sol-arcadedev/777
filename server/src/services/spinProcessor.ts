@@ -1,8 +1,9 @@
 import prisma from "../lib/db.js";
 import { getQueueEntries, getWinnerEntries } from "../lib/queries.js";
 import { determineOutcome, generateReelSymbols } from "./spinLogic.js";
+import { getDynamicValues } from "./dynamicEscalation.js";
 import type { SpinOutcome } from "./spinLogic.js";
-import type { ReelSymbol, SpinResultEvent } from "@shared/types";
+import type { SpinResultEvent } from "@shared/types";
 import {
   checkTokenBalance,
   getRewardWalletBalance,
@@ -14,10 +15,13 @@ import { wsBroadcaster } from "./wsServer.js";
 
 const PROCESS_INTERVAL_MS = 2000;
 
+const DYNAMIC_BROADCAST_INTERVAL_MS = 5000;
+
 class QueueProcessor {
   private queue: number[] = [];
   private processing = false;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private dynamicTimer: ReturnType<typeof setInterval> | null = null;
 
   /** Load PENDING spins from DB and start the processing loop. */
   async start(): Promise<void> {
@@ -30,6 +34,7 @@ class QueueProcessor {
     console.log(`QueueProcessor: loaded ${this.queue.length} pending spin(s)`);
 
     this.timer = setInterval(() => this.tick(), PROCESS_INTERVAL_MS);
+    this.dynamicTimer = setInterval(() => this.broadcastDynamic(), DYNAMIC_BROADCAST_INTERVAL_MS);
     console.log(
       `QueueProcessor: started (interval ${PROCESS_INTERVAL_MS}ms)`,
     );
@@ -39,6 +44,21 @@ class QueueProcessor {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
+    }
+    if (this.dynamicTimer) {
+      clearInterval(this.dynamicTimer);
+      this.dynamicTimer = null;
+    }
+  }
+
+  private async broadcastDynamic(): Promise<void> {
+    try {
+      const config = await prisma.configuration.findFirst();
+      if (!config) return;
+      const dynamicValues = getDynamicValues(config);
+      wsBroadcaster.broadcast({ type: "dynamic:update", data: dynamicValues });
+    } catch {
+      // ignore broadcast errors
     }
   }
 
@@ -118,7 +138,8 @@ class QueueProcessor {
 
     if (outcome === "WIN") {
       const balance = await getRewardWalletBalance();
-      const rewardSol = balance * (config.rewardPercent / 100);
+      const dynamicValues = getDynamicValues(config);
+      const rewardSol = balance * (dynamicValues.rewardPercent / 100);
       const rewardLamports = BigInt(Math.floor(rewardSol * 1e9));
       const txSignature = await transferReward(spin.holderAddress, rewardSol);
 

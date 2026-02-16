@@ -31,10 +31,6 @@ export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
         <span className="text-gold-dim">SOL: </span>
         <span className="text-cream">{activeSpin.solTransferred}</span>
       </div>
-      <div>
-        <span className="text-gold-dim">WIN: </span>
-        <span className="text-win-green">{activeSpin.winChance}%</span>
-      </div>
     </div>
   );
 }

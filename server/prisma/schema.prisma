@@ -19,7 +19,12 @@ model Configuration {
   tokenCA          String   @default("To be added")
   requiredHoldings BigInt   @default(500000)
   minSolTransfer   Float    @default(0.01)
-  rewardPercent    Float    @default(30.0)
+  winChanceStart         Float    @default(2.0)
+  winChanceEnd           Float    @default(8.0)
+  rewardPercentStart     Float    @default(40.0)
+  rewardPercentEnd       Float    @default(10.0)
+  escalationDurationMin  Int      @default(60)
+  escalationStartedAt    DateTime?
   timerDurationSec Int      @default(300)
   timerExpiresAt   DateTime?
   paused              Boolean  @default(false)

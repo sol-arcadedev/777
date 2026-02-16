@@ -11,7 +11,12 @@ export interface Configuration {
   tokenCA: string;
   requiredHoldings: bigint;
   minSolTransfer: number;
-  rewardPercent: number;
+  winChanceStart: number;
+  winChanceEnd: number;
+  rewardPercentStart: number;
+  rewardPercentEnd: number;
+  escalationDurationMin: number;
+  escalationStartedAt: Date | null;
   timerDurationSec: number;
   timerExpiresAt: Date | null;
   paused: boolean;
@@ -63,6 +68,15 @@ export interface BuybackBurn {
   createdAt: Date;
 }
 
+// ─── Dynamic Escalation Values ──────────────────────────
+
+export interface DynamicValues {
+  winChance: number;
+  rewardPercent: number;
+  cycleProgress: number;
+  cycleSecondsLeft: number;
+}
+
 // ─── API DTOs (JSON-safe — bigint serialized as string) ──
 
 export interface ConfigurationDTO {
@@ -70,7 +84,12 @@ export interface ConfigurationDTO {
   tokenCA: string;
   requiredHoldings: string;
   minSolTransfer: number;
-  rewardPercent: number;
+  winChanceStart: number;
+  winChanceEnd: number;
+  rewardPercentStart: number;
+  rewardPercentEnd: number;
+  escalationDurationMin: number;
+  escalationStartedAt: string | null;
   timerDurationSec: number;
   timerExpiresAt: string | null;
   paused: boolean;
@@ -138,7 +157,6 @@ export interface WinnerHistoryEntry {
 export interface QueueEntry {
   holderAddress: string;
   solTransferred: number;
-  winChance: number;
   queuePosition: number;
 }
 
@@ -175,7 +193,8 @@ export type WsServerMessage =
   | { type: "config:update"; data: ConfigurationDTO }
   | { type: "spin:result"; data: SpinResultEvent }
   | { type: "reward:balance"; data: { balanceSol: number } }
-  | { type: "burn:update"; data: BurnStatsDTO };
+  | { type: "burn:update"; data: BurnStatsDTO }
+  | { type: "dynamic:update"; data: DynamicValues };
 
 // ─── Admin Config Update Request ─────────────────────────
 
@@ -183,7 +202,11 @@ export interface UpdateConfigRequest {
   tokenCA?: string;
   requiredHoldings?: string;
   minSolTransfer?: number;
-  rewardPercent?: number;
+  winChanceStart?: number;
+  winChanceEnd?: number;
+  rewardPercentStart?: number;
+  rewardPercentEnd?: number;
+  escalationDurationMin?: number;
   timerDurationSec?: number;
   paused?: boolean;
   feeClaimIntervalSec?: number;

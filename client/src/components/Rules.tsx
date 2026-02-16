@@ -21,13 +21,16 @@ export default function Rules({ requiredHoldings, minSolTransfer }: RulesProps) 
           HOLD <span className="text-gold">{Number(requiredHoldings).toLocaleString()}</span> 777 TOKENS
         </li>
         <li>
-          SEND MIN <span className="text-gold">{minSolTransfer} SOL</span> TO VERIFICATION WALLET
+          SEND <span className="text-gold">{minSolTransfer} SOL</span> TO VERIFICATION WALLET
         </li>
         <li>
-          BASE WIN: <span className="text-win-green">3%</span> | +1% PER 0.01 SOL (MAX 5%)
+          WIN CHANCE INCREASES OVER TIME (<span className="text-win-green">2% &rarr; 8%</span>)
         </li>
         <li>
-          WINNERS GET % OF REWARD WALLET
+          REWARD DECREASES AS CHANCE RISES (<span className="text-gold">40% &rarr; 10%</span>)
+        </li>
+        <li>
+          CYCLE RESETS EVERY <span className="text-gold">60 MIN</span>
         </li>
         <li>
           BUSY? YOU JOIN THE QUEUE

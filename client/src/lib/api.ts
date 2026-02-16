@@ -6,6 +6,7 @@ import type {
   UpdateConfigRequest,
   SystemStatus,
   BurnStatsDTO,
+  DynamicValues,
 } from "@shared/types";
 
 const ADMIN_TOKEN_KEY = "admin_token";
@@ -119,4 +120,15 @@ export function getSystemStatus() {
 
 export function getBurnStats() {
   return fetchJSON<BurnStatsDTO>(`${API_BASE}/burn-stats`);
+}
+
+export function getDynamicValues() {
+  return fetchJSON<DynamicValues>(`${API_BASE}/dynamic-values`);
+}
+
+export function resetEscalation() {
+  return fetchJSON<{ escalationStartedAt: string }>(`${API_BASE}/admin/reset-escalation`, {
+    method: "POST",
+    headers: authHeaders(),
+  });
 }

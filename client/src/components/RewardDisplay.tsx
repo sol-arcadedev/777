@@ -1,9 +1,10 @@
 interface RewardDisplayProps {
   rewardPercent: number;
   balanceSol: number | null;
+  cycleProgress: number;
 }
 
-export default function RewardDisplay({ rewardPercent, balanceSol }: RewardDisplayProps) {
+export default function RewardDisplay({ rewardPercent, balanceSol, cycleProgress }: RewardDisplayProps) {
   const rewardAmount = balanceSol !== null ? balanceSol * (rewardPercent / 100) : null;
 
   return (
@@ -29,6 +30,17 @@ export default function RewardDisplay({ rewardPercent, balanceSol }: RewardDispl
           <div className="text-[7px] text-gold-dim/60">OF REWARD WALLET</div>
         </>
       )}
+      {/* Cycle progress bar */}
+      <div className="mt-1.5 h-1 bg-casino-dark rounded-full overflow-hidden">
+        <div
+          className="h-full transition-all duration-1000"
+          style={{
+            width: `${cycleProgress * 100}%`,
+            background: "linear-gradient(90deg, #daa520, #ff6b6b)",
+          }}
+        />
+      </div>
+      <div className="text-[6px] text-gold-dim/40 mt-0.5">CYCLE {Math.round(cycleProgress * 100)}%</div>
     </div>
   );
 }

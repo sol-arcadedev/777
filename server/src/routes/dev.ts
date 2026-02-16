@@ -9,7 +9,7 @@ import {
 } from "@solana/web3.js";
 import bs58 from "bs58";
 import prisma from "../lib/db.js";
-import { calculateWinChance } from "../services/spinLogic.js";
+import { getDynamicValues } from "../services/dynamicEscalation.js";
 import { queueProcessor } from "../services/spinProcessor.js";
 import {
   connection,
@@ -126,7 +126,7 @@ router.post("/api/dev/simulate-transfer", async (req, res) => {
       return;
     }
 
-    const winChance = calculateWinChance(solAmount, config.minSolTransfer);
+    const winChance = getDynamicValues(config).winChance;
 
     const maxPos = await prisma.spinTransaction.aggregate({
       _max: { queuePosition: true },

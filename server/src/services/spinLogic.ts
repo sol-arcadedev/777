@@ -4,29 +4,10 @@
 
 import type { ReelSymbol } from "@shared/types";
 
-const BASE_WIN_CHANCE = 3; // 3%
-const CHANCE_INCREMENT = 1; // +1% per extra 0.01 SOL
-const MAX_WIN_CHANCE = 5; // cap at 5%
-const SOL_STEP = 0.01;
-
 // 1/3 of total chance = jackpot, 2/3 = refund
 const JACKPOT_FRACTION = 1 / 3;
 
 export type SpinOutcome = "WIN" | "REFUND" | "LOSE";
-
-/**
- * Calculate win chance based on SOL transferred and minimum required.
- * Base 3%, +1% per extra 0.01 SOL above min, capped at 5%.
- */
-export function calculateWinChance(
-  solTransferred: number,
-  minSolTransfer: number,
-): number {
-  const extraSol = solTransferred - minSolTransfer;
-  const extraSteps = Math.floor(extraSol / SOL_STEP);
-  const bonus = Math.max(0, extraSteps) * CHANCE_INCREMENT;
-  return Math.min(BASE_WIN_CHANCE + bonus, MAX_WIN_CHANCE);
-}
 
 /**
  * Determine spin outcome given a win chance percentage.

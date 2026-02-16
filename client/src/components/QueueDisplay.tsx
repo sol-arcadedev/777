@@ -36,8 +36,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
             >
               <span className="text-gold font-bold">#{i + 1}</span>
               <span className="text-cream">{formatAddress(entry.holderAddress)}</span>
-              <span className="text-cream">{entry.solTransferred}</span>
-              <span className="text-win-green">{entry.winChance}%</span>
+              <span className="text-cream">{entry.solTransferred} SOL</span>
             </div>
           ))}
         </div>
