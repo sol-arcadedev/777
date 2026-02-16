@@ -5,6 +5,7 @@ import {
   getRewardWalletBalance,
   transferToCreator,
   transferToReward,
+  transferToTreasury,
   getCreatorWalletBalance,
   buybackAndBurn,
 } from "../services/solana.js";
@@ -125,6 +126,52 @@ router.post("/api/admin/trigger-buyback", adminAuth, async (_req, res) => {
   } catch (err) {
     console.error("Trigger buyback failed:", err);
     res.status(500).json({ error: "Buyback failed" });
+  }
+});
+
+router.post("/api/admin/claim-fees", adminAuth, async (req, res) => {
+  try {
+    const { amount } = req.body as { amount?: number };
+    const claimAmount = (typeof amount === "number" && amount > 0) ? amount : 0.05;
+
+    const creatorBal = await getCreatorWalletBalance();
+    if (creatorBal < claimAmount + 0.002) {
+      res.status(400).json({ error: `Creator wallet balance too low (${creatorBal.toFixed(4)} SOL)` });
+      return;
+    }
+
+    const treasuryAmount = claimAmount * 0.7;
+    const rewardAmount = claimAmount * 0.3;
+
+    await transferToTreasury(treasuryAmount);
+    await transferToReward(rewardAmount);
+
+    const feeClaim = await prisma.feeClaim.create({
+      data: {
+        claimTxSignature: `admin-claim-${Date.now()}`,
+        totalClaimed: claimAmount,
+        treasuryAmount,
+        rewardAmount,
+      },
+    });
+
+    const newBalance = await getRewardWalletBalance();
+    wsBroadcaster.broadcast({
+      type: "reward:balance",
+      data: { balanceSol: newBalance },
+    });
+
+    console.log(`Admin fee claim: ${claimAmount} SOL → 70% Treasury (${treasuryAmount}), 30% Reward (${rewardAmount})`);
+    res.json({
+      id: feeClaim.id,
+      totalClaimed: claimAmount,
+      treasuryAmount,
+      rewardAmount,
+      rewardWalletBalance: newBalance,
+    });
+  } catch (err) {
+    console.error("Admin claim fees failed:", err);
+    res.status(500).json({ error: "Fee claim failed" });
   }
 });
 

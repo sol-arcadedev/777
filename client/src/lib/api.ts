@@ -122,6 +122,17 @@ export function getSpinHistory() {
   return fetchJSON<SpinHistoryEntry[]>(`${API_BASE}/spin-history`);
 }
 
+export function claimFees(amount?: number) {
+  return fetchJSON<{ totalClaimed: number; treasuryAmount: number; rewardAmount: number; rewardWalletBalance: number }>(
+    `${API_BASE}/admin/claim-fees`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ amount }),
+    },
+  );
+}
+
 export function getBurnStats() {
   return fetchJSON<BurnStatsDTO>(`${API_BASE}/burn-stats`);
 }
