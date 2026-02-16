@@ -9,14 +9,42 @@ export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
   if (!activeSpin) {
     return (
       <div
-        className="w-full max-w-[420px] text-center text-[8px] text-gold-dim/30 py-2 px-4"
+        className="w-full max-w-[420px] text-center py-3 px-4 scanlines"
         style={{
-          background: "rgba(13,94,46,0.3)",
-          border: "2px solid rgba(42,110,63,0.3)",
-          boxShadow: "2px 2px 0 rgba(0,0,0,0.2)",
+          background: "linear-gradient(180deg, #2a0000 0%, #1a0000 100%)",
+          border: "2px solid #8b7340",
+          boxShadow: "2px 2px 0 rgba(0,0,0,0.4), inset 0 0 8px rgba(0,0,0,0.5)",
         }}
       >
-        NO ACTIVE SPIN
+        <div className="flex items-center justify-center gap-2">
+          <div
+            className="animate-pulse-dot"
+            style={{
+              width: "4px",
+              height: "4px",
+              backgroundColor: "#8b7340",
+              borderRadius: "50%",
+              opacity: 0.4,
+            }}
+          />
+          <span
+            className="text-[9px] text-gold-dim/40 tracking-widest"
+            style={{ fontFamily: "'Press Start 2P', cursive" }}
+          >
+            NO ACTIVE SPIN
+          </span>
+          <div
+            className="animate-pulse-dot"
+            style={{
+              width: "4px",
+              height: "4px",
+              backgroundColor: "#8b7340",
+              borderRadius: "50%",
+              opacity: 0.4,
+              animationDelay: "0.5s",
+            }}
+          />
+        </div>
       </div>
     );
   }
@@ -24,7 +52,7 @@ export default function SlotDisplay({ activeSpin }: SlotDisplayProps) {
   return (
     <div
       key={`${activeSpin.holderAddress}-${activeSpin.solTransferred}`}
-      className="w-full max-w-[420px] flex items-center justify-center gap-6 text-[8px] px-4 py-2 animate-slide-up"
+      className="w-full max-w-[420px] flex items-center justify-center gap-6 text-[9px] px-4 py-2 animate-slide-up"
       style={{
         background: "#0d5e2e",
         border: "2px solid #00ff41",

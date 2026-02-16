@@ -47,9 +47,26 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
       )
     : waiting;
 
+  if (waiting.length === 0) {
+    return (
+      <div
+        className="w-full py-2 px-3 text-center"
+        style={{
+          background: "rgba(10,10,10,0.92)",
+          border: "2px solid #daa520",
+          boxShadow: "2px 2px 0 rgba(0,0,0,0.4), 0 0 6px rgba(218,165,32,0.1)",
+        }}
+      >
+        <span className="text-[9px] uppercase tracking-wider text-gold-dim/60">
+          SPIN QUEUE — EMPTY
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div
-      className="p-3 w-full max-w-[420px]"
+      className="p-3 w-full"
       style={{
         background: "linear-gradient(180deg, rgba(10,10,10,0.92) 0%, rgba(17,17,17,0.92) 100%)",
         border: "3px solid #daa520",
@@ -58,7 +75,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
       }}
     >
       <div className="flex items-center justify-between mb-2">
-        <h2 className="text-[9px] uppercase tracking-wider text-gold">
+        <h2 className="text-[10px] uppercase tracking-wider text-gold">
           SPIN QUEUE ({waiting.length})
         </h2>
         {waiting.length > 3 && (
@@ -72,12 +89,8 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
         )}
       </div>
 
-      {waiting.length === 0 ? (
-        <div className="text-[8px] text-gold-dim/50 text-center py-3">
-          NO SPINS WAITING
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-[8px] text-gold-dim/50 text-center py-3">
+      {filtered.length === 0 ? (
+        <div className="text-[9px] text-gold-dim/50 text-center py-3">
           NO MATCHING ADDRESS
         </div>
       ) : (
@@ -90,7 +103,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
             return (
               <div
                 key={`${entry.holderAddress}-${entry.queuePosition}`}
-                className="flex items-center text-[7px] px-2 py-1.5 animate-slide-in-left"
+                className="flex items-center text-[8px] px-2 py-1.5 animate-slide-in-left"
                 style={{
                   background: isSearchHit
                     ? "#3d2a00"

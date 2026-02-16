@@ -8,6 +8,7 @@ import type {
   SpinTransactionDTO,
   WinnerHistoryEntry,
 } from "@shared/types";
+import { verificationWallet } from "../config/wallets.js";
 
 export function serializeConfig(config: Configuration): ConfigurationDTO {
   return {
@@ -26,6 +27,7 @@ export function serializeConfig(config: Configuration): ConfigurationDTO {
     queueEnabled: config.queueEnabled,
     slotActive: config.slotActive,
     updatedAt: config.updatedAt.toISOString(),
+    verificationWalletAddress: verificationWallet.publicKey.toBase58(),
   };
 }
 

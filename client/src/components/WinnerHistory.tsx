@@ -41,7 +41,7 @@ function CopyButton({ text }: { text: string }) {
 export default function WinnerHistory({ winners }: WinnerHistoryProps) {
   return (
     <div
-      className="p-4 flex flex-col max-h-[420px]"
+      className="p-4 flex flex-col max-h-[320px]"
       style={{
         background: "linear-gradient(180deg, rgba(10,10,10,0.92) 0%, rgba(17,17,17,0.92) 100%)",
         border: "3px solid #daa520",
@@ -49,9 +49,28 @@ export default function WinnerHistory({ winners }: WinnerHistoryProps) {
         backdropFilter: "blur(4px)",
       }}
     >
-      <h2 className="text-[11px] uppercase tracking-wider text-gold mb-3">
-        RECENT REWARDS
-      </h2>
+      <div
+        className="-mx-4 -mt-4 mb-3 py-1.5 px-3 flex items-center justify-center gap-2"
+        style={{
+          background: "linear-gradient(180deg, #daa520, #8b7340)",
+          borderBottom: "2px solid #6b5320",
+        }}
+      >
+        <span className="inline-flex gap-0.5">
+          {[0, 1, 2].map((i) => (
+            <span
+              key={i}
+              className="text-[10px] font-bold"
+              style={{ fontFamily: "'Press Start 2P', cursive", color: "#1a0f00" }}
+            >
+              7
+            </span>
+          ))}
+        </span>
+        <h2 className="text-[11px] uppercase tracking-wider" style={{ color: "#1a0f00" }}>
+          RECENT REWARDS
+        </h2>
+      </div>
 
       {winners.length === 0 ? (
         <div className="text-[9px] text-gold-dim/50 text-center py-4">
@@ -85,9 +104,8 @@ export default function WinnerHistory({ winners }: WinnerHistoryProps) {
               >
                 +{Number(w.solWon).toFixed(4)} SOL
               </div>
-              {/* Row 3: Details */}
-              <div className="flex items-center justify-between text-[7px]" style={{ color: "rgba(218,165,32,0.5)" }}>
-                <span>SENT {Number(w.solTransferred).toFixed(4)} | {w.winChance}%</span>
+              {/* Row 3: TX link */}
+              <div className="flex items-center justify-end text-[8px]">
                 <a
                   href={`${SOLSCAN_TX_URL}${w.rewardTxSignature}`}
                   target="_blank"

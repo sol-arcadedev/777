@@ -1,3 +1,5 @@
+import { useState, useEffect, useRef } from "react";
+
 interface RewardDisplayProps {
   rewardPercent: number;
   balanceSol: number | null;
@@ -5,6 +7,17 @@ interface RewardDisplayProps {
 
 export default function RewardDisplay({ rewardPercent, balanceSol }: RewardDisplayProps) {
   const rewardAmount = balanceSol !== null ? balanceSol * (rewardPercent / 100) : null;
+  const [pulsing, setPulsing] = useState(false);
+  const prevBalance = useRef(balanceSol);
+
+  useEffect(() => {
+    if (prevBalance.current !== null && balanceSol !== null && balanceSol !== prevBalance.current) {
+      setPulsing(true);
+      const timer = setTimeout(() => setPulsing(false), 600);
+      return () => clearTimeout(timer);
+    }
+    prevBalance.current = balanceSol;
+  }, [balanceSol]);
 
   return (
     <div
@@ -16,18 +29,18 @@ export default function RewardDisplay({ rewardPercent, balanceSol }: RewardDispl
         backdropFilter: "blur(4px)",
       }}
     >
-      <div className="text-[8px] uppercase tracking-wider text-gold-dim mb-1">CURRENT REWARD</div>
+      <div className="text-[9px] uppercase tracking-wider text-gold-dim mb-1">CURRENT REWARD</div>
       {rewardAmount !== null ? (
         <>
-          <div className="text-2xl font-bold text-gold">{rewardAmount.toFixed(4)} SOL</div>
-          <div className="text-[7px] text-gold-dim/60">
+          <div className={`text-2xl font-bold text-gold ${pulsing ? "animate-reward-pulse" : ""}`}>{rewardAmount.toFixed(4)} SOL</div>
+          <div className="text-[8px] text-gold-dim/60">
             {rewardPercent}% OF {balanceSol!.toFixed(4)}
           </div>
         </>
       ) : (
         <>
           <div className="text-2xl font-bold text-gold">{rewardPercent}%</div>
-          <div className="text-[7px] text-gold-dim/60">OF REWARD WALLET</div>
+          <div className="text-[8px] text-gold-dim/60">OF REWARD WALLET</div>
         </>
       )}
     </div>

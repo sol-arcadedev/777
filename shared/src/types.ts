@@ -82,6 +82,7 @@ export interface ConfigurationDTO {
   queueEnabled: boolean;
   slotActive: boolean;
   updatedAt: string;
+  verificationWalletAddress: string;
 }
 
 export interface SpinTransactionDTO {

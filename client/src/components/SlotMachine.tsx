@@ -592,7 +592,7 @@ export default function SlotMachine({
 
             {!showingResult && !paused && phase === "idle" && (
               <div className="text-[7px] text-gold-dim/70">
-                SEND {minSolTransfer} SOL TO SPIN
+                AWAITING NEXT SPIN
               </div>
             )}
           </div>
