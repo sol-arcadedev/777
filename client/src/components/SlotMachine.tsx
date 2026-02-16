@@ -558,6 +558,42 @@ export default function SlotMachine({
               />
             ))}
           </div>
+
+          {/* ─── Pay Table ─── */}
+          <div
+            className="mt-2 mx-auto"
+            style={{
+              background: "rgba(0,0,0,0.5)",
+              border: "2px solid #8b7340",
+              padding: "4px 10px",
+              boxShadow: "inset 0 1px 4px rgba(0,0,0,0.6)",
+              maxWidth: "280px",
+            }}
+          >
+            <div className="text-[7px] text-gold-dim/60 text-center tracking-widest mb-1">PAY TABLE</div>
+            <div className="flex items-center justify-center gap-4">
+              {/* 7-7-7 = Win */}
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
+                  <SymbolDisplay symbol="7" size="small" />
+                  <SymbolDisplay symbol="7" size="small" />
+                  <SymbolDisplay symbol="7" size="small" />
+                </div>
+                <span className="text-[8px] text-win-green font-bold">=&nbsp;REWARD</span>
+              </div>
+              {/* Divider */}
+              <div style={{ width: "1px", height: "20px", background: "#8b7340", opacity: 0.5 }} />
+              {/* SOL-SOL-SOL = Refund */}
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5">
+                  <SymbolDisplay symbol="SOL" size="small" />
+                  <SymbolDisplay symbol="SOL" size="small" />
+                  <SymbolDisplay symbol="SOL" size="small" />
+                </div>
+                <span className="text-[8px] font-bold" style={{ color: "#14F195" }}>=&nbsp;REFUND</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ─── Bottom Light Bulbs ─── */}

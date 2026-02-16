@@ -11,6 +11,8 @@ router.use(configRouter);
 router.use(spinRouter);
 router.use(winnersRouter);
 router.use(adminRouter);
-router.use(devRouter);
+if (process.env.DEV_MODE === "true") {
+  router.use(devRouter);
+}
 
 export default router;

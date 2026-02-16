@@ -42,7 +42,13 @@ router.get("/api/queue", async (_req, res) => {
   }
 });
 
+// Manual spin submission — only available in DEV_MODE.
+// On mainnet, spins are created exclusively by walletMonitor (on-chain transfer detection).
 router.post("/api/spin", async (req, res) => {
+  if (process.env.DEV_MODE !== "true") {
+    res.status(403).json({ error: "Manual spin submission is disabled" });
+    return;
+  }
   try {
     const { holderAddress, solTransferred } = req.body as SubmitSpinRequest;
 

@@ -20,7 +20,26 @@ import type { SystemStatus } from "@shared/types";
 
 const router = Router();
 
+// Rate limiting for login: max 5 attempts per IP per 15 minutes
+const loginAttempts = new Map<string, { count: number; resetAt: number }>();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 5;
+
 router.post("/api/admin/login", (req, res) => {
+  const ip = req.ip || req.socket.remoteAddress || "unknown";
+  const now = Date.now();
+  const entry = loginAttempts.get(ip);
+
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= LOGIN_MAX_ATTEMPTS) {
+      const retryAfter = Math.ceil((entry.resetAt - now) / 1000);
+      res.status(429).json({ error: `Too many login attempts. Try again in ${retryAfter}s` });
+      return;
+    }
+  } else if (entry && now >= entry.resetAt) {
+    loginAttempts.delete(ip);
+  }
+
   const adminPassword = process.env.ADMIN_PASSWORD;
   if (!adminPassword) {
     res.status(503).json({ error: "Admin not configured" });
@@ -29,10 +48,18 @@ router.post("/api/admin/login", (req, res) => {
 
   const { password } = req.body;
   if (!password || password !== adminPassword) {
+    const current = loginAttempts.get(ip);
+    if (current && now < current.resetAt) {
+      current.count++;
+    } else {
+      loginAttempts.set(ip, { count: 1, resetAt: now + LOGIN_WINDOW_MS });
+    }
     res.status(401).json({ error: "Invalid password" });
     return;
   }
 
+  // Successful login — clear attempts
+  loginAttempts.delete(ip);
   const token = createSession();
   res.json({ token });
 });

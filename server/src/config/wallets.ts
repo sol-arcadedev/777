@@ -69,4 +69,4 @@ console.log(`  Verification: ${verificationWallet.publicKey.toBase58()}`);
 console.log(`  Creator:      ${creatorWallet.publicKey.toBase58()}`);
 console.log(`  Reward:       ${rewardWallet.publicKey.toBase58()}`);
 console.log(`  Treasury:     ${treasuryAddress.toBase58()}`);
-console.log(`  RPC:          ${rpcUrl}`);
+console.log(`  RPC:          ${rpcUrl.replace(/api-key=[^&]+/, "api-key=***")}`);
