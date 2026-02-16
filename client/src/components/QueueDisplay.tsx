@@ -131,7 +131,7 @@ export default function QueueDisplay({ waiting }: QueueDisplayProps) {
                 <CopyButton text={entry.holderAddress} />
                 {entry.incomingTxSignature && (
                   <a
-                    href={`${SOLSCAN_TX_URL}${entry.incomingTxSignature}?cluster=devnet`}
+                    href={`${SOLSCAN_TX_URL}${entry.incomingTxSignature}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-gold-dim/60 hover:text-gold transition-colors ml-auto shrink-0"
