@@ -79,7 +79,7 @@ export default function Header({ tokenCA }: HeaderProps) {
           className="border-2 border-gold-dim px-5 py-2 text-[10px] text-cream hover:border-gold transition-colors uppercase"
           style={{ boxShadow: "2px 2px 0 rgba(0,0,0,0.5)" }}
         >
-          X
+          X COMMUNITY
         </a>
       </div>
     </header>
