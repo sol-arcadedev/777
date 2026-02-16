@@ -1,6 +1,6 @@
+import "./env.js";
 import express from "express";
 import cors from "cors";
-import dotenv from "dotenv";
 import router from "./routes/index.js";
 import prisma from "./lib/db.js";
 import { queueProcessor } from "./services/spinProcessor.js";
@@ -9,8 +9,6 @@ import { startBuybackTimerLoop } from "./services/buybackTimerLoop.js";
 import { walletMonitor } from "./services/walletMonitor.js";
 import { wsBroadcaster } from "./services/wsServer.js";
 import { setTokenMintAddress } from "./config/wallets.js";
-
-dotenv.config({ path: "../.env" });
 
 const app = express();
 const PORT = process.env.PORT || 3001;
