@@ -35,8 +35,8 @@ function App() {
   const pendingSpinsRef = useRef<SpinHistoryEntry[] | null>(null);
   const pendingWinnersRef = useRef<WinnerHistoryEntry[] | null>(null);
   const pendingQueueRef = useRef<QueueEntry[] | null>(null);
-  const spinResultRef = useRef<SpinResultEvent | null>(null);
-  spinResultRef.current = spinResult;
+  // Tracks whether a spin animation is active — updated immediately in the handler, not on render
+  const animatingRef = useRef(false);
 
   // Fetch initial reward balance + spin history
   useEffect(() => {
@@ -51,17 +51,20 @@ function App() {
   const onWsMessage = useCallback(
     (msg: WsServerMessage) => {
       switch (msg.type) {
+        case "spin:result":
+          // Set animating flag IMMEDIATELY so subsequent messages in the same tick are deferred
+          animatingRef.current = true;
+          setSpinResult(msg.data);
+          break;
         case "queue:update":
-          // Defer if animation is playing
-          if (spinResultRef.current) {
+          if (animatingRef.current) {
             pendingQueueRef.current = msg.data;
           } else {
             applyQueue(msg.data);
           }
           break;
         case "winners:update":
-          // Defer if animation is playing
-          if (spinResultRef.current) {
+          if (animatingRef.current) {
             pendingWinnersRef.current = msg.data;
           } else {
             applyWinners(msg.data);
@@ -70,9 +73,6 @@ function App() {
         case "config:update":
           applyConfig(msg.data);
           break;
-        case "spin:result":
-          setSpinResult(msg.data);
-          break;
         case "reward:balance":
           setRewardBalance(msg.data.balanceSol);
           break;
@@ -80,8 +80,7 @@ function App() {
           setBurnUpdate(msg.data);
           break;
         case "spins:update":
-          // Defer if animation is playing
-          if (spinResultRef.current) {
+          if (animatingRef.current) {
             pendingSpinsRef.current = msg.data;
           } else {
             setSpinHistory(msg.data);
@@ -96,6 +95,7 @@ function App() {
 
   // Called when the spin animation fully completes (reels stopped + result displayed)
   const handleSpinResultDone = useCallback(() => {
+    animatingRef.current = false;
     setSpinResult(null);
 
     // Flush any deferred updates
