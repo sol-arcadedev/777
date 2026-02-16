@@ -43,4 +43,4 @@ COPY server/prisma server/prisma
 EXPOSE 3001
 ENV PORT=3001
 
-CMD ["sh", "-c", "cd server && npx prisma migrate deploy && cd .. && node server/dist/index.js"]
+CMD ["sh", "-c", "cd server && npx prisma migrate deploy && cd .. && node server/dist/server/src/index.js"]
