@@ -17,7 +17,7 @@ export async function getQueueEntries(): Promise<QueueEntry[]> {
 }
 
 export async function getWinnerEntries(
-  limit = 20,
+  limit = 50,
 ): Promise<WinnerHistoryEntry[]> {
   const winners = await prisma.spinTransaction.findMany({
     where: {
@@ -45,7 +45,7 @@ function parseReelSymbols(raw: string | null): [ReelSymbol, ReelSymbol, ReelSymb
 }
 
 export async function getSpinHistoryEntries(
-  limit = 30,
+  limit = 50,
 ): Promise<SpinHistoryEntry[]> {
   const spins = await prisma.spinTransaction.findMany({
     where: { result: { not: "PENDING" } },

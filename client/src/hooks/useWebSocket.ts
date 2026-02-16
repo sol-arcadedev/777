@@ -13,8 +13,16 @@ export function useWebSocket(onMessage: (msg: WsServerMessage) => void) {
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const url = `${protocol}//${window.location.host}/ws`;
+    let url: string;
+    const apiUrl = import.meta.env.VITE_API_URL;
+    if (apiUrl) {
+      const wsProtocol = apiUrl.startsWith("https") ? "wss:" : "ws:";
+      const host = apiUrl.replace(/^https?:\/\//, "");
+      url = `${wsProtocol}//${host}/ws`;
+    } else {
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      url = `${protocol}//${window.location.host}/ws`;
+    }
     const ws = new WebSocket(url);
     wsRef.current = ws;
 

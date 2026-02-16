@@ -54,7 +54,7 @@ export function getQueue() {
   return fetchJSON<QueueEntry[]>(`${API_BASE}/queue`);
 }
 
-export function getWinners(limit = 20) {
+export function getWinners(limit = 50) {
   return fetchJSON<WinnerHistoryEntry[]>(`${API_BASE}/winners?limit=${limit}`);
 }
 

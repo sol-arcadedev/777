@@ -1,4 +1,6 @@
-export const API_BASE = "/api";
+export const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : "/api";
 
 export const POLL_FALLBACK_MS = 30_000;
 export const POLL_CONFIG_MS = POLL_FALLBACK_MS;

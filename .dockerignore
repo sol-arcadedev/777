@@ -1,0 +1,9 @@
+node_modules
+.git
+.claude
+.idea
+client/dist
+server/dist
+*.md
+.env
+scripts
