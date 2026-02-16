@@ -10,7 +10,7 @@ interface SlotMachineProps {
 }
 
 type Phase = "idle" | "spinning" | "stopping" | "result";
-type ReelState = "spinning" | "stopped";
+type ReelState = "spinning" | "stopped" | "initial";
 
 const MIN_SPIN_MS = 2000;
 const STAGGER_DELAY_MS = 600;
@@ -130,7 +130,7 @@ function Reel({
           ))}
         </div>
       ) : (
-        <div className="animate-reel-stop">
+        <div className={state === "stopped" ? "animate-reel-stop" : ""}>
           <SymbolDisplay symbol={finalSymbol} />
         </div>
       )}
@@ -244,9 +244,9 @@ export default function SlotMachine({
     null,
   );
   const [reelStates, setReelStates] = useState<[ReelState, ReelState, ReelState]>([
-    "stopped",
-    "stopped",
-    "stopped",
+    "initial",
+    "initial",
+    "initial",
   ]);
   const [leverPull, setLeverPull] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -592,7 +592,7 @@ export default function SlotMachine({
 
             {!showingResult && !paused && phase === "idle" && (
               <div className="text-[7px] text-gold-dim/70">
-                SEND {minSolTransfer}+ SOL TO SPIN
+                SEND {minSolTransfer} SOL TO SPIN
               </div>
             )}
           </div>
