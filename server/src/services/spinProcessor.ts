@@ -1,4 +1,5 @@
 import prisma from "../lib/db.js";
+import { serializeConfig } from "../lib/serialize.js";
 import { getQueueEntries, getWinnerEntries } from "../lib/queries.js";
 import { determineOutcome, generateReelSymbols } from "./spinLogic.js";
 import { getDynamicValues } from "./dynamicEscalation.js";
@@ -186,6 +187,15 @@ class QueueProcessor {
         type: "reward:balance",
         data: { balanceSol: newBalance },
       });
+
+      // Reset escalation cycle on jackpot
+      const updatedConfig = await prisma.configuration.update({
+        where: { id: 1 },
+        data: { escalationStartedAt: new Date() },
+      });
+      wsBroadcaster.broadcast({ type: "config:update", data: serializeConfig(updatedConfig) });
+      wsBroadcaster.broadcast({ type: "dynamic:update", data: getDynamicValues(updatedConfig) });
+      console.log(`Spin #${spinId}: Escalation cycle reset (jackpot hit)`);
     } else if (outcome === "REFUND") {
       // Check verification wallet balance before refund
       const verBalance = await getVerificationWalletBalance();
