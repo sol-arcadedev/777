@@ -167,6 +167,18 @@
   100% { transform: scale(1); text-shadow: 0 0 0 transparent; }
 }
 
+/* Reward arrow float up */
+@keyframes reward-arrow-up {
+  0% { opacity: 0; transform: translateY(6px); }
+  20% { opacity: 1; transform: translateY(0); }
+  80% { opacity: 1; transform: translateY(-4px); }
+  100% { opacity: 0; transform: translateY(-8px); }
+}
+
+.reward-arrow-up {
+  animation: reward-arrow-up 1.5s steps(8) forwards;
+}
+
 /* Win amount pulse */
 @keyframes win-amount-pulse {
   0% { transform: scale(1); }
